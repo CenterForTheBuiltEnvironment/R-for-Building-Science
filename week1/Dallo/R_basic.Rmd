@@ -11,6 +11,18 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Let's start!
 
+## Use the BerkeleyHub resources or install {.tabset}
+
+### test
+
+Here in Berkeley you have access to Jupyter and Rstudio: <https://datahub.berkeley.edu/>
+
+But if you need to install R you can find it here: <https://cloud.r-project.org>
+
+R do not comes with RStudio, which is the main IDE for R. You can install the RStudio Desktop from here: <https://www.rstudio.com/products/rstudio/>
+
+### gigi
+
 ## General interaction with R environment(s)
 ```{r}
 "Hello Cal!" # this is an explicit print
