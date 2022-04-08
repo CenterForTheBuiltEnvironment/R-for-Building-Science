@@ -28,7 +28,7 @@ Yes it is: next week you'll *just* have to go in the "Git" panel inside the RStu
 
 But... :smiling_imp:
 
-!["From a great power comes a great responsibility.."](Dallo/pics/conflicts.jpg?raw=true "Title")
+!["Somewhere in Dagobah.."](Dallo/pics/sense.jpg?raw=true "Title")
 
 Please do not modify the files we are giving to you.. create copies and work on those or we will have "conflicts".. and we don't have time to solve them so:
 
