@@ -1,0 +1,413 @@
+---
+title: "ARCH249 Special Topic: R for Building Science"
+subtitle: "Week 2 - Working with survey data in R"
+author: "Tom Parkinson"
+date: '`r format(Sys.time(), "%B,  %Y")`'
+output:
+  html_document:
+    self_contained: yes
+    df_print: paged
+    toc: yes
+    toc_float: yes
+    toc_collapsed: yes
+    toc_depth: 2
+    number_sections: yes
+    theme: spacelab
+---
+
+```{r setup, include = FALSE}
+
+# set global settings to hide console messages from markdown document
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE)
+
+# use package manager
+require("pacman")
+
+# load necessary packages
+pacman::p_load(tidyverse, janitor, # data wrangling 
+               knitr, # produce markdown documents
+               patchwork, scales) # plotting
+
+```
+
+
+# Introduction
+
+Blah blah surveys
+
+# Importing Data
+
+In most cases, the first task for any data analysis workflow is to import data into your R environment. There are many different ways to encode store data. Arguably the most common is the comma-separated values file, or CSV. The humble csv is uses 'delimited text' where values are separated by a comma. Each line of the file is a data record. You've almost certainly encountered a .csv file (perhaps in Excel), and we'll import one such file here to start our analysis. Note that R works with 'in-memory' data, meaning it loads and works with data directly from your computers memory (rather than a file on a disk drive).
+
+## Base R
+
+The ubiquity of .csv files means that R has an in-built function for importing them:
+
+```{r eval = FALSE}
+
+read.csv("my_csv_filename.csv")
+
+```
+
+## `readr::read_csv()`
+
+The base R implementation will work, but (as with all things) the `tidyverse` implementation is better. The equivalent function comes from the `readr` package and is similarly named:
+
+```{r eval = FALSE}
+
+read_csv("my_csv_filename.csv")
+
+```
+
+
+Note the substitution of `.` with `_`. Many of the `tidyverse` functions exist in base R. There are often good reasons to use the `tidyverse` implementation, especially if you're using a it later in the analysis. We won't go into these now (they have to do with data types), but a good tip to spotting a `tidyverse` function: almost all functions in `tidyverse` use the underscore in place of the more conventional period.
+
+## Arguments when importing data
+
+In our earlier example, we did not explicitly set any of the arguments. While this works in most cases, there might be unexpected behaviour stemming from the use of defaults. We'll start with a simple one. Let's use `readr` to import our csv file.
+
+``` {r}
+
+# import csv file
+survey_data <- read_csv("qualtrics_data.csv")
+
+```
+
+We've just imported data into our working environment. We can inspect the data using the `head()` function.
+
+``` {r}
+
+# print head
+head(survey_data)
+
+```
+
+The data looks as we'd expect it to. Each column is a variable - in this case a question in the survey - and each column is a response. Notice that `readr` was smart enough to assume that the column headers were in the first row of our .csv file. For arguments sake (pun intended), what would happen if we turn off that default? Let's set the `col_names` argument to `FALSE` when importing the .csv file and see what happens. 
+
+```{r}
+
+# read csv file without headers
+survey_data <- read_csv("qualtrics_data.csv", col_names = FALSE)
+
+# print first five rows
+head(survey_data, n = 5)
+
+```
+
+Something's up!? Notice how our headers are now `X1`, `X2` etc. And our actual header names are in the first row. That's because we told `readr` that our column names were not in the first row and it took us at our word. `tidyverse` tends to have seemingly logical defaults - more so than base R - but there are times when you'll want to interrogate the defaults to make sure things are working the way you expect. For reference, quickly scan all the possible arguments for `read_csv()` on the [help page](https://readr.tidyverse.org/reference/read_delim.html).
+
+## Exercise: import data
+
+Import the csv with the correct headers and print the first 10 rows of the data in the [Exercise 1](#exercise_1) code chunk. Make sure to give the object a name you'll remember - I recommend something explicit like `survey_data`.
+
+``` {r exercise_1, echo = TRUE}
+
+# read csv with headers
+
+
+# print first 10 rows
+
+
+```
+
+
+# Data Types
+
+Last week we went over the theory of data types. You might remember words like integers or doubles or strings. These are how R understands the data you're working with at a low-level. It might not seem important but it really is. For example, `6` might look like a number to you but R could be storing it as a string. This becomes a problem if you wanted to add two "numbers" that are actually strings. Unfortunately, it's something you just have to learn over time. But we can point to a few clues to help you along the way. 
+
+One key motivation for using `readr` over base R's csv import is that it makes a very good attempt at guessing the data types. There's even an argument to tell it how hard to look (look at the `guess_max` argument). Let's preview our data again and take a look at how well it guessed the data types. Take note of the text below the column names e.g. `<chr>`.
+
+```{r}
+
+# read csv file without headers
+survey_data <- read_csv("qualtrics_data.csv", col_names = TRUE)
+
+# print first five rows
+head(survey_data, n = 5)
+
+```
+
+**Question:** How do you think it went? What are some of the data types that you're seeing? And do they seem reasonable? Bonus points: does the `Recorded Date` column seem correct? 
+
+We won't spend too much time interrogating these in our dataset right now, but we wanted to bring it to your attention for later.
+
+
+# Selecting Data
+
+We've imported our data into R and now we want to start to work with it. Let's quickly get an idea of what we are working with. I find myself using two arguments to do this: `dim()` and `summary()`.
+
+```{r}
+
+# check the 'dimensions' of the dataframe
+dim(survey_data)
+
+```
+
+**Question:** Running `dim()` returned two numbers - what do you think they refer to? 
+
+Now let's try `summary()`. Just a heads up that this will print quite a lot of text in your console; I've hidden the results for the sake of brevity.
+
+```{r results = 'hide'}
+
+# summarise the dataframe
+summary(survey_data)
+
+```
+
+## **Exercise:** column names
+A lot of the 'space' in the printout here are the headers (or column names), which in our dataset are the question strings. If we just wanted to know what those are we can use the `names()` function. Try that out in the [Exercise 2](#exercise_2) code chunk and see what it returns.
+
+``` {r exercise_2}
+
+# print just the column names
+
+
+```
+
+## `dplyr::select()`
+
+I find it hard to work with a dataframe that contains 100+ columns. Many others disagree, but I prefer to make a new dataframe containing only the columns that I need so I can visually inspect the data while preserving the original dataframe. To do that I use the `select()` function. The `select()` function is used to choose which *columns* you want to keep in your dataframe. More details about `select()` can be found at the [help page](https://dplyr.tidyverse.org/reference/select.html). Note: if you want to select which *rows* to keep then you would use another function - we'll get to that in a bit.
+
+In our [analysis of the CBE Occupant Survey database](https://journal-buildingscities.org/articles/10.5334/bc.76/), we found that workspace acoustics are the biggest problem area in offices. We'll analyse the acoustics questions to see how this particular office rates. Let's start by selecting the questions that relate to acoustics. We'll create a new dataframe and call it `acoustics_data`. Our column names are a bit clunky as they are full strings, so `names()` might be useful here to jog your memory. 
+
+The arguments for `select()` are very straightforward - the names of the columns you want to keep separated by commas. We have spaces in our column names so we need to wrap them in quotation marks e.g. `select(Response_ID)` becomes `select("Response ID")` when there is a space. Quotation marks also work for stings without spaces, too.
+
+```{r}
+
+# select the columns we need to analyse acoustics-related questions
+acoustics_data <- survey_data %>%
+  select("Response ID",
+         "Progress",
+         "How satisfied are you with the... - Noise level in your workspace",
+         "How satisfied are you with the... - Sound privacy in your workspace (ability to have communications without your neighbors overhearing and vice versa)",
+         "Overall, does the acoustic quality in your workspace enhance or interfere with your ability to get your job done?")
+
+```
+
+**Question:** Wait...what's this weird `%>%` thing we've just used?
+
+There's a lot of text in the above code chunk, so let's break down what just happened. First, we assign the output of our code chunk to an object named `acoustics_data`. Then, we take our `survey_data` object and we "pipe" it (i.e. pass it to) the `select()` function. Within the `select()` function, we nominate the names of the five columns that we'd like to keep in our new dataframe.
+
+## Exercise: create new dataframe
+Include one more acoustics-related question in our new `acoustics_data` dataframe in the [Exercise 3](#exercise_3) code chunk. Tip: look for a question about *dissatisfaction* with the acoustic environment. Then inspect the dataframe using the `head()` function.
+
+```{r exercise_3}
+
+# repeat select() but with an additional acoustics question
+
+# print first n rows of new acoustics dataframe
+
+```
+
+
+# Renaming columns
+
+While having the full question string as a column name makes sense initially, it becomes very clumsy working with such long names in code. There's also the added complications of having spaces in the column names, which should be avoided where possible. So to calm my nerves, we are going to quickly rename the columns so it's easier to work with in the subsequent code. 
+
+**Question:** Any guesses as to what the function to rename is called?
+
+Let's rename the `Response ID` and the `Progress` columns by doing three things:
+
+1. Shorten names where possible
+
+2. Removing spaces
+
+3. Using lowercase
+
+``` {r}
+
+# rename the response id column
+acoustics_data <- acoustics_data %>%
+  rename("response_id" = "Response ID",
+         "progress" = "Progress")
+
+```
+
+Note that the argument for `rename()` uses the syntax `new_name = old_name`. Inspect your dataframe and see what happened to the name of the first two columns. This is going to be much easier to work with moving forward because you won't have to wrap the column names in quotation marks when referring to them. 
+
+## **Exercise:** rename columns
+Rename the other columns using the above rules in the [Exercise 4](#exercise_4) code chunk. Make sure they are easy to understand as you'll have to remember them later on. For example, *"How satisfied are you with the... - Noise level in your workspace"* could become `noise_level`. And *"Overall, does the acoustic quality in your workspace enhance or interfere with your ability to get your job done?"* could become `overall_acoustics`.
+
+``` {r exercise_4}
+
+# rename the other columns
+acoustics_data <- acoustics_data %>%
+  rename("noise_level" = 3,
+         "sound_privacy" = 4,
+         "overall_acoustics" = 5)
+
+```
+
+
+# Filtering data
+
+We just learned how to select and rename columns from our dataframe. The `select()` function is column-wise, but what about selecting particular rows? This is known as filtering, and the `{dplyr}` package has a handy function for that too!
+
+## `dplyr::filter()`
+
+Filtering is when you want to subset your data row-wise. This is useful if you only want to keep rows where a particular condition is met. For our dataset, each row is a survey respondent. One of the columns that we kept in the earlier section was the progress that each made respondent made through the survey. So a value of 100 means they completed the survey, while a value of 0 means they did not answer any questions. That seems like a good value to filter on! As always, more details about `filter()` can be found at the [help page](https://dplyr.tidyverse.org/reference/filter.html).
+
+In much the same way as we did when using `select()` to choose the columns, we can use `filter()` to choose particular rows. The arguments for `filter()` are the conditions upon which we base the filtering. Using our progress column, we are going to filter responses that completed at least half of the survey. You can quickly check the number of rows *before* filtering using the `nrow()` function.
+
+```{r}
+
+# count the number of rows before filtering
+nrow(acoustics_data)
+
+# filter data based on survey progress
+acoustics_data <- acoustics_data %>%
+  filter(progress >= 50)
+
+# count the number of rows after filtering
+nrow(acoustics_data)
+
+```
+
+We went from a dataframe of 135 rows to a dataframe of 117 rows. This tells us that `r 135-117` respondents completed less than half of the survey. We've just removed those responses from our dataset. 
+
+**Question:** Inspect your new dataframe now that we've dropped some respondents. Does it look like a 'complete' dataset to you?
+
+It seems that our filtering missed a few cases, as shown by the `NA` responses. This tells us that while those respondents *did* complete more than half of the survey they *did not* answer the acoustics questions that we are analyzing. Luckily for us, `filter()` accepts multiple criteria. Let's keep our first condition around survey progress but add another condition that checks for `NA` values also. We're going to introduce two new concepts here:
+
+1. The **NOT** check with `!` i.e. this is *not* true
+
+2. Checking if a value is missing using the `is.na()` function
+
+```{r}
+
+# filter the acoustics dataset based on two conditions
+acoustics_data <- acoustics_data %>%
+  filter(progress >= 50 & !is.na(noise_level))
+
+# count the number of rows after filtering
+nrow(acoustics_data)
+
+```
+
+**Question:** what does `!` combined with `is.na()` do to our conditional logic?
+
+Much like the last filter, we reduced the length of the dataframe from 117 rows to 112. From this we can infer that 5 rows had `NA` values in the `noise_level` column. I think the dataframe is reasonably 'clean' and we can start to better understand the occupant responses.
+
+**Side Quest:** the `{tidyr}` package has the `drop_na()` function. It is often easier to use that than to add a condition when filtering. See if you can combine `filter()` and `drop_na()` using pipes to reach the same result as we did in the above code chunk.
+
+# Summarising Data
+
+One of the first tasks you'll want to do with a new dataset is to provide simple summaries like counts (frequencies), averages, etc. These are almost always reported somewhere in your work, and are also a good opportunity for you (the analyst) to get early insights on the dataset. The `{tidyverse}` packages have a number of really useful functions to help summarise data. 
+
+## `dplyr::count()`
+
+The data we are working with is non-numeric, so we wouldn't use things like means and standard deviations. We're going to show you these things next week. For now, we'll start our analysis by simply counting the number of responses for each of the categories. Again, this is simple to do with `tidyverse` combined with the all-mighty `%>%` (pipe)! Let's count the number of different responses to our `noise_level` question.
+
+``` {r}
+
+# count responses to acoustics question
+acoustics_data %>%
+  count(noise_level)
+
+```
+
+What happened here is that `{dplyr}` found all the unique values in the `noise_level` column and counted their occurrences. Simple! The arguments for `count()` are the columns that you wish to count the unique occurrences.
+
+##**Exercise:** counts
+
+Summarise the other columns using `count()` in the [Exercise 5](#exercise_5) code chunk. Try looking at the `dplyr::count()` [help page](https://dplyr.tidyverse.org/reference/count.html) to work out the correct syntax for the arguments.
+
+``` {r exercise_5}
+
+# count the responses for the other questions
+
+```
+
+But there's something bugging me about this table...
+
+**Question:** why is our summary table ordered the way it is?
+
+You've heard us keep blabbing on about data types and how important they are. Well, here's a practical example of that. Underneath the column header in the above table you'll see it says `<chr`. That is the clue you'd need to answer the question of why the table is ordered the way it is.
+
+
+# Factors
+
+So far we've been working with `integer` (progress column) and `character` (responses) data types. We haven't had too many issues, but now is the perfect time to introduce the `factor` data type. Factors are used to categorize data i.e. categorical data. An example of categorical data is gender, where there are a limited number of unique categories. Factors can be unordered (e.g. gender) or ordered (e.g. "Very Dissatisfied" is worse than "Satisfied"). Factors are stored as 'levels' and can be applied to both integers and characters in R. All of these attributes make factors an incredibly useful data type when working with survey data.
+
+Factors are one of the most common data types, and are natively supported in R. The `tidyverse` package for working with factors is `{forcats}`, and we'll work through some basic functions that are useful for our analysis.
+
+## Converting to factor
+The most simple (and useful) task is converting a column of values to a factor. In our dataset, we'd like to convert the responses to our acoustic questions from characters to factors. As with most things, there's the base R approach and the `tidyverse` approach. Let's try both as an example of how there are multiple ways to do the same thing in R. First, the base R approach. Reminder: the `$` operator is used to nominate a column from a data frame e.g. `object_name$column_name`.
+
+``` {r}
+
+# convert acoustics questions to factors
+acoustics_data$noise_level <- as.factor(acoustics_data$noise_level)
+acoustics_data$sound_privacy <- as.factor(acoustics_data$sound_privacy)
+acoustics_data$overall_acoustics <- as.factor(acoustics_data$overall_acoustics)
+
+```
+
+That was reasonably easy, right? We tell R that we want to take a column and convert it to a factor using `as.factor()`. The argument is simply the name of the column. Use `str()` to double check that it worked as we want it to.
+
+``` {r echo = FALSE}
+
+# check structure of dataframe
+str(acoustics_data)
+
+```
+
+The print out of `str()` shows us that those columns that were characters are now factors. And there are 7 levels within each of those factors. That makes sense given responses to our survey questions were given on 7-point Likert scales. We can use base R to show us all the levels within a factor, too.
+
+``` {r}
+
+# print out all levels within one of our factor columns
+levels(acoustics_data$noise_level)
+
+```
+
+## ``tidyverse`
+
+We've already told R that the responses are actually factors rather than characters. We can achieve the same thing in `tidyverse` with the added bonus of wrapping it up in one command. I'm going to do a bad thing here and use a function that I haven't explained yet. That function, `mutate()`, is part of `{dplyr}` and basically says "modify an existing column in this way or create a new column that is this" e.g. summing two columns together into a new variable. I'm skipping over it because Fede will go into greater detail next week. So ignore this piece for now and just focus on the factors.
+
+``` {r}
+
+# convert response columns to factors
+acoustics_data <- acoustics_data %>%
+  mutate(noise_level = factor(noise_level),
+         sound_privacy = factor(sound_privacy),
+         overall_acoustics = factor(overall_acoustics))
+
+```
+
+Just to reiterate what happened - we took the `acoustics_data` object, mutated (i.e. modified) the three columns, and converted them to factors. Check the data types using `str()`. Same result, different approach!
+
+**Side Quest:** if you want to modify a number of columns in exactly the same way, then check out the `across()` function combined with `mutate()`. Perfect for those obsessed with elegant, minimal code! Full details are [here](https://dplyr.tidyverse.org/reference/across.html).
+
+## Factor levels
+
+Levels are the unique values within a factor. For example, the question "What is your marital status?" might have 3 levels of "Single", "Married" and "Divorced". Factors and levels are the ideal way to store responses to questions with a limited number of predefined options e.g. radio box questions. We've converted our questions to factors, each with 7 levels. Use `levels()` to remind yourself of what the factors are.
+
+We've successfully made the responses factors but we haven't yet solved the problem of the level order. The output of `levels()` is showing that the ordering of the responses is alphabetical, when we know there is a better way to order them. The `factor()` function has the `levels` argument where we can explicitly define the order of the levels. Here's an example.
+
+``` {r}
+
+# define the level order for 'noise_level'
+acoustics_data <- acoustics_data %>%
+  mutate(noise_level = factor(noise_level, 
+                              levels = c("Very dissatisfied", "Dissatisfied", "Somewhat dissatisfied",
+                                         "Neither satisfied nor dissatisfied", 
+                                         "Somewhat satisfied", "Satisfied", "Very satisfied")))
+
+```
+
+**Question:** what is the `c` doing within our `levels` argument?
+
+Check the levels of `noise_level` again and see what happened to the order. Success! R know knows that there is an order to the levels within our factor. This doesn't seem very important now but it will make your life so much easier when you come to visualize your results. It's also important if you come to do statistical tests, although you'd want to explore the `is.ordered()` argument if you find yourself there. For us, simply changing the order in which they are printed is sufficient.
+
+## **Exercise:** factor reordering
+
+Change the order of the other columns in the [Exercise 6](#exercise_6) code chunk to better represent the underlying data. You can use the above code chunk as an example. Make sure to check the levels as the questions might use different scales.
+
+``` {r exercise_6}  
+
+# define the level order for the other questions
+
+```
+
+
