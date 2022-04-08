@@ -336,6 +336,46 @@ round(ugmc_conv(ppb_O3, M_O3, ext_T))
 
 ### Calculate CO2 concentration in mg/m3 from ppm
 
+# Plots
+
+## Scatter Plot
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(3, 7, 8, 9, 12)
+
+plot(x, y,
+     main="My Graph", 
+     xlab="The x-axis", ylab="The y axis",
+     type = "o",
+     col= "firebrick",
+     cex=1,
+     pch=19
+     )
+```
+
+## Boxplot
+
+```{r}
+set.seed(1234)
+a <- as.character(c(rep("Male",100), rep("Female",100)))
+b <- as.numeric(c(runif(n = 100, min = 175 , max = 180),
+       runif(n = 100, min = 165, max = 170)
+       ))
+c <- as.factor(round(runif(n = 200, min = 1, max = 3)))
+
+df <- data.frame(cbind(a,b,c))
+glimpse(df)
+
+df$a <- as.factor(df$a)
+df$b <- as.numeric(df$b)
+df$c <- as.factor(df$c)
+glimpse(df)
+
+library(ggplot2)
+ggplot(df,aes(a,b))+geom_boxplot(aes(fill=c))
+```
+
 
 # Some further readings
 
