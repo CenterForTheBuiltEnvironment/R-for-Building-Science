@@ -32,4 +32,5 @@ Please do not modify the files we are giving to you.. create copies and work on 
 
 ![Our policy to solve "merge" conflicts](Dallo/pics/onedoesnot.jpg?raw=true "Title")
 
-Alright we should be ready to start!
+Alright, now that you're advised we should be ready to start!!
+
