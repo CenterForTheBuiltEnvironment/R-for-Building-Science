@@ -1,20 +1,35 @@
-During the class will be shown how to work with date and time with R. We will use the Tidyverse programming style and deepen the Lubridate library tools
+# In summary
 
-Equipment necessary for the students: personal computer. No needs to have R installed. We will use the Jupyter Notebook hosted at: 
-<https://datahub.berkeley.edu/>.
+During this first class will play around with R in RStudio (and a little on Jupiter..). We will use (as much as I can!) the Tidyverse programming style! The Tidy's wizard in the room is Tom actually.. 
 
-Follow the instruction to get into your Berkeley account and once logged into your JupyterHub environment:
+# What do you need
 
-- from *Files* open: *New > Terminal*
+You can use the Jupyter Notebook hosted at: <https://datahub.berkeley.edu/>
 
-```{sh}
-cd
-mkdir -p timeSeriesR_Apr2022/data
-cd timeSeriesR_Apr2022/data/
-wget https://github.com/theRosyProject/TimeSeriesR/blob/main/Archive.zip?raw=true
-mv Archive.zip\?raw\=true MRG_2021.zip
-unzip MRG_2021.zip
-exit
-```
+Or you can install R and Rstudio.
 
-And we should be ready to start!
+# Ready to go?
+
+So... now that you are all set (right!?) it is time to:
+
+- Open RStudio
+- New Project (top-right)
+- Choose "Version Control"
+  - In "Repository url" copy-paste <https://github.com/CenterForTheBuiltEnvironment/R-for-Building-Science>
+  - "Project directory name" should be updated automatically..
+  - Click "Browse..."" (Create a subdirectory in your filesystem e.g. "/Documents/ARCH249_Mod3_2022")
+- Click "Create Project"
+  
+Wow!... lot's of stuff! And [GitHub](https://github.com/) seems great right?! 
+
+Yes it is: next week you'll *just* have to go in the "Git" panel inside the RStudio "Environment" window (usually the top right window of the IDE) and click on "Pull" to download the updates!
+
+But... :smiling_imp:
+
+![From a great power comes a great responsibility..](Dallo/pics/conflicts.jpg?raw=true "Title")
+
+Please do not modify the files we are giving to you.. create copies and work on those or we will have "conflicts".. and we don't have time to solve them so:
+
+![Our policy to solve "merge" conflicts](Dallo/pics/onedoesnot.jpg?raw=true "Title")
+
+Alright we should be ready to start!
