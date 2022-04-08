@@ -4,9 +4,11 @@ During this first class will play around with R in RStudio (and a little on Jupi
 
 # What do you need
 
-You can use the Jupyter Notebook hosted at: <https://datahub.berkeley.edu/>
+Here in Berkeley you have access to Jupyter and Rstudio: <https://datahub.berkeley.edu/>! Use this resources to try both IDEs. Limitation: we just realized you can’t install external software (e.g. “eplus”. We will need it in week4)
 
-Or you can install R and Rstudio.
+So… for this class you will need to install R on your laptop. You can find it here: https://cloud.r-project.org
+
+R do not comes with RStudio (.. make sense), which is the main IDE for R. You can install the RStudio Desktop from here: https://www.rstudio.com/products/rstudio/
 
 # Ready to go?
 
@@ -26,11 +28,11 @@ Yes it is: next week you'll *just* have to go in the "Git" panel inside the RStu
 
 But... :smiling_imp:
 
-![From a great power comes a great responsibility..](Dallo/pics/conflicts.jpg?raw=true "Title")
+!["From a great power comes a great responsibility.."](Dallo/pics/conflicts.jpg?raw=true "Title")
 
 Please do not modify the files we are giving to you.. create copies and work on those or we will have "conflicts".. and we don't have time to solve them so:
 
-![Our policy to solve "merge" conflicts](Dallo/pics/onedoesnot.jpg?raw=true "Title")
+![(Boromir at the last council when we were discussing our policies)](Dallo/pics/onedoesnot.jpg?raw=true "Title")
 
 Alright, now that you're advised we should be ready to start!!
 
