@@ -26,6 +26,8 @@ Wow!... lot's of stuff! And [GitHub](https://github.com/) seems great right?!
 
 Yes it is: next week you'll *just* have to go in the "Git" panel inside the RStudio "Environment" window (usually the top right window of the IDE) and click on "Pull" to download the updates!
 
+SEE THIS NEW COMMENT!
+
 But... :smiling_imp:
 
 !["Somewhere in Dagobah.."](Dallo/pics/sense.jpg?raw=true "Title")

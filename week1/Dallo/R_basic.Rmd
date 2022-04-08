@@ -242,6 +242,16 @@ while (i <= 5) {
 }
 ```
 
+# Break
+
+Continue the example of the carpenter.. 
+
+- Never stop to learn
+- Impossible to avoid mistakes..
+- Even when you will be a pro.. remember to wear your brown pants
+
+![You: ".. when yesterday everything was fine..."](pics/brownPants.jpg?raw=true "Title")
+
 # Operators
 
 Operators are used to perform operations on variables and values. We just saw the Arithmetic operators..
