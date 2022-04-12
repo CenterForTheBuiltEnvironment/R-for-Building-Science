@@ -1,7 +1,7 @@
 ---
-title: "RStudio basic tour"
-author: "Federico Dallo"
-date: "4/5/2022"
+title: "RStudio tour!"
+author: "Fede Dallo"
+date: "4/7/2022"
 #output: html_document
 output:
   #bookdown::html_document2: default
@@ -18,23 +18,37 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
 # Welcome!
 
-## Work remotely or on your laptop? {.tabset}
+This IDE is your workshop.. imagine that you have to built a wooden table. You need:
 
-Here in Berkeley you have access to Jupyter and Rstudio: <https://datahub.berkeley.edu/>! Use this resources to try both IDEs. Limitation: we just realized you can't install external software (e.g. "eplus". We will need it in week4)
+- wood
+- space! (e.g. garage?)
+- instruments (e.g. a saw..)
+- instruction
 
-So... for this class  you will need to install R on your laptop. You can find it here: <https://cloud.r-project.org>
+Well.. if you have to develop and algorithm (or a program).. then:
 
-R do not comes with RStudio (.. make sense), which is the main IDE for R. You can install the RStudio Desktop from here: <https://www.rstudio.com/products/rstudio/>
+- R (== wood)
+- IDE (== space)
+- functions (== instruments)
+- documentation (== instruction)
 
-## General interaction with R environment(s) {.tabset}
+<!-- # this is a comment in Rmd
+## Familiarize with Rmd {.tabset}
+-->
 
-### Basic calls
-```{r}
-"Hello Cal!" # this is an explicit print
+## Familiarize with Rmd
+
+We should spend some time in describing RStudio interface... I like to think at the IDE as separated into two columns, each 
+
+### Basic calls 
+
+```{r, echo=TRUE}
+"Hello Cal!" # this is an explicit print.. and, btw, this is a comment!
 ```
 
 ```{r}
@@ -44,9 +58,13 @@ R do not comes with RStudio (.. make sense), which is the main IDE for R. You ca
 ```{r}
 is.numeric(5) # this is a number.. 
 ```
+```{r}
+class(TRUE)
+```
 
 ```{r}
 typeof(5) # but what kind of number??
+class(5)
 ```
 
 ```{r}
@@ -63,4 +81,343 @@ for (i in 1:5) {print(i)}
 
 ### Excercise
 
-## Arithmetics 
+Print a sequence of 10 integer numbers starting from 3 (e.g. [3,4,5,..., 12]) 
+
+Suggestion: uncomment and solve the error(s) in the following code chunch
+
+```{r}
+# x = "1"
+# for (i in 1:10) {print(i + x)}
+```
+
+# Arithmetics 
+
+We already saw an operation of sum in the previous example.. let's dig into the operators!
+
+```{r, echo=FALSE}
+ar_ops <- data.frame(Operators = c("+", "-", "*", "/", "^ or **", "%%", "%/%"),
+                     Names = c("Addition", "Substraction", "Multiplication",
+                               "Division", "Exponential", "Remainder", 
+                               "Integer Division"),
+                     Example = c("x + y", "x - y", "x * y", "x / y",
+                                 "x ^ y", "x %% y", "x %/% y")
+                     )
+knitr::kable(ar_ops)
+```
+
+
+## Addition
+
+```{r}
+2 + 2
+sum(1,2,3)
+```
+
+## Substraction 
+```{r}
+4 - 2
+sum(4, -3)
+sum( as.numeric( c("4", "5", "-7") ) ) # example of nested functions that make Tom mad!
+```
+
+## Multiplication
+
+```{r}
+3 * 3
+```
+
+## Division
+
+```{r}
+20 / 5
+```
+
+## Exponential
+
+```{r}
+5^2
+5**2
+```
+
+## Remainder
+
+```{r}
+10 %% 5
+10 %% 6
+10 %% 7
+10 %% 8
+10 %% 9
+```
+
+## Integer Division
+
+```{r}
+10 %/% 3 
+```
+
+
+### Exercise
+
+Calculate the results of $ 13 * 43 $, then apply to the result a Division, Integer Division and Reminder using [7, 3, 5]   
+
+```{r}
+# 13 * 43 / 7
+# ...
+```
+
+Calculate the following integer division:
+
+```{r}
+1 %/% 0.2 #https://stat.ethz.ch/R-manual/R-devel/library/base/html/Arithmetic.html
+```
+
+# If... Else
+
+Logical conditions. These conditions can be used in several ways, most commonly in "if statements" and loops
+
+```{r, echo=FALSE}
+log_cond <- data.frame(
+Operator= c( "==", "!=",">", "<",	">=",	"<="),
+ Name=c("Equal","Not equal","Greater than","Less than","Greater than or equal to","Less than or equal to"),
+ Example=c("x == y","x != y",	 "x > y",	 "x < y",	 "x >= y",	 "x <= y")
+)
+knitr::kable(log_cond)
+```
+
+  
+```{r}
+a <- 33
+b <- 200
+
+if (b > a) {
+  print("b is greater than a")
+}
+```
+
+## Excercise
+
+Use if..else to evaluate if a number is Even or Odd.. 
+
+![You:"I wonder why I was asked to do this.."](pics/even_odd.jpeg?raw=true "Title")
+
+```{r}
+# let's do it using the reminder
+set.seed(16)
+test_nr <- round(runif(n = 1, min = 1, max = 100))
+# if (test_nr %% 2 == 0) {
+#   print("Even!")
+# } else {
+#   print("Odd!")
+# }
+if (test_nr %% 2 == 0) {
+  print(paste0(test_nr, " is Even!"))
+} else {
+  print(paste0(test_nr, " is Odd!"))
+}
+```
+
+# Loops
+
+## For 
+
+```{r}
+for ( i in seq(1,5,1) ) { #try (1,6,2)
+  print(i)
+}
+````
+
+```{r}
+for ( i in c(1,3,5,7,12) ) {
+  print(i)
+}
+```
+
+## While
+
+```{r}
+i <- 1
+while (i <= 5) {
+  print(i)
+  i <- i + 1
+}
+```
+
+# Break
+
+Continue the example of the carpenter.. 
+
+- Never stop to learn
+- Impossible to avoid mistakes..
+- Even when you will be a pro.. remember to wear your brown pants
+
+![You: ".. when yesterday everything was fine..."](pics/brownPants.jpg?raw=true "Title")
+
+# Operators
+
+Operators are used to perform operations on variables and values. We just saw the Arithmetic operators..
+
+## Assignment 
+
+```{r}
+assign("variableName", 2) # https://stat.ethz.ch/R-manual/R-devel/library/base/html/assign.html
+variableName
+```
+
+But we generally use the "<-" operator to assign a variable
+
+```{r}
+a <- 17
+```
+
+The reason why "=" should be avoided is cause it is mathematically incorrect in some situations:
+
+```{r}
+i <- 1
+while (i <= 5) {
+  print(i)
+  i <- i + 1 # we saw this before!
+}
+```
+
+
+## How to choose a good name for a variable?
+
+Variable and function names should use only lowercase letters, numbers, and "_". Use underscores ("_") (so called **snake case**) to separate words within a name. Alternative you can use the **BigCamelCase** convention. Just be consistent.. it is hard, takes time.
+
+```{r}
+a <- 7 # poor name.. what is "a"? e.g. could be the 7th day of the week: Sunday? Or the age of Arianna
+sunday <- 7 # still difficult to read in the "environment" 
+sunday_index <- 7 # better
+arianna_age <- 7 # ok, snake case
+AriannaAge <- 7 # ok, BigCamelCase.. but still.. if Arianna is alive she might grow?
+fede_age <- (lubridate::year(Sys.time()) - 1989) # guess what is this constant..
+```
+
+```{r}
+`why this will not be fun!` <- 11 
+`why this will not be fun!` # https://stat.ethz.ch/R-manual/R-devel/library/base/html/make.names.html
+```
+
+# Functions
+
+We can create our functions... be carefull that the chance that some function (optimized) already exist.. is high! Better to read the documentation.. I'll show a good example on week3.
+
+Here an example of a really futile function.. with also a terrible name.. 
+
+```{r}
+my_function <- function() { # create a function with the name my_function
+  print("Hello Cal!")
+}
+```
+
+This function still exist.. any guess??
+
+## Here another interesting creature:
+
+```{r}
+# going "inception"
+i <- n <- 1 # permutations with repetitions ! n^k
+while (i <= 3 ) { 
+    for (j in 1:3 ) {
+        for (k in 1:3) {
+            print(paste0(i, "-", j, "-", k))
+            n <- n + 1
+        }
+    }
+    i <- i + 1
+}
+print((n - 1))
+```
+
+Better?
+
+```{r}
+expand.grid(rep(list(1:3),3)) # permutations with repetitions ! n^k
+#?expand.grid()
+```
+
+# Be creative... not too much
+
+![You: "I will consider a better approach next monsoon..."](pics/works.jpeg?raw=true "Title")
+
+## The next monsoon... with very important deadline
+
+![You: "..and you whole-life-backup is in a pen drive in the pants that are the whashing machine..."](pics/waterworld.jpg?raw=true "Title")
+
+## Excercise
+
+Goal: Calculate O3 concentration in ppb and ug/m3
+
+Data:
+
+- Formula: μg/m3 = (ppb)\*(12.187)\*(M) / (273.15 + °C)
+where M is the molecular weight of the gaseous pollutant. An atmospheric pressure of 1 atmosphere is assumed.
+- Molecular weight (M) for O3 = 48 g/mol
+- ppb CO2 in atmosphere is ~ 4000 == 400 ppm
+
+```{r}
+ugmc_conv <- function(ppb, M, Temp) {
+  ugmc <- ppb * (12.187) * M / (273.15 + Temp)
+  return(ugmc)
+}
+
+M_O3 <- 48
+ppb_O3 <- 1
+ext_T <- 25
+
+round(ugmc_conv(ppb_O3, M_O3, ext_T))
+```
+
+### Calculate CO2 concentration in mg/m3 from ppm
+
+# Plots
+
+## Scatter Plot
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+y <- c(3, 7, 8, 9, 12)
+
+plot(x, y,
+     main="My Graph", 
+     xlab="The x-axis", ylab="The y axis",
+     type = "o",
+     col= "firebrick",
+     cex=1,
+     pch=19
+     )
+```
+
+## Boxplot
+
+```{r}
+set.seed(1234)
+a <- as.character(c(rep("Male",100), rep("Female",100)))
+b <- as.numeric(c(runif(n = 100, min = 175 , max = 180),
+       runif(n = 100, min = 165, max = 170)
+       ))
+c <- as.factor(round(runif(n = 200, min = 1, max = 3)))
+
+df <- data.frame(cbind(a,b,c))
+glimpse(df)
+
+df$a <- as.factor(df$a)
+df$b <- as.numeric(df$b)
+df$c <- as.factor(df$c)
+glimpse(df)
+
+library(ggplot2)
+ggplot(df,aes(a,b))+geom_boxplot(aes(fill=c))
+```
+
+
+# Some further readings
+
+- https://google.github.io/styleguide/Rguide.html
+- https://style.tidyverse.org
+- https://www2.dmu.dk/atmosphericenvironment/expost/database/docs/ppm_conversion.pdf
+- https://www.w3schools.com/r/default.asp
+- https://minimaxir.com/2017/06/r-notebooks/
+
+
+
