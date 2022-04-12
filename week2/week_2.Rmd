@@ -18,7 +18,7 @@ output:
 ```{r setup, include = FALSE}
 
 # set global settings to hide console messages from markdown document
-knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE)
 
 # use package manager
 require("pacman")
@@ -33,11 +33,22 @@ pacman::p_load(tidyverse, janitor, # data wrangling
 
 # Introduction
 
-Blah blah surveys
+Surveys blah blah...hopefully you worked through the readings for the week and we all know what post-occupancy evaluations (POEs) are.
+
+Let's start by making sure you've installed the `{tidyverse}` packages. To install packages, open RStudio and in the console (down the bottom) type `install.packages("tidyverse")`. Remember, the console is where you run code that only needs to happen once; a script (.R or .Rmd files) is when you are developing code that will run a series of commands.
+
+The first part of any script is to load the necessary packages. Let's start the script by adding the following code.
+
+``` {r}
+
+# load tidyverse
+library(tidyverse)
+
+```
 
 # Importing Data
 
-In most cases, the first task for any data analysis workflow is to import data into your R environment. There are many different ways to encode store data. Arguably the most common is the comma-separated values file, or CSV. The humble csv is uses 'delimited text' where values are separated by a comma. Each line of the file is a data record. You've almost certainly encountered a .csv file (perhaps in Excel), and we'll import one such file here to start our analysis. Note that R works with 'in-memory' data, meaning it loads and works with data directly from your computers memory (rather than a file on a disk drive).
+In most cases, the next task for any data analysis workflow is to import data into your R environment. There are many different ways to encode store data. Arguably the most common is the comma-separated values file, or CSV. The humble csv uses 'delimited text' where values are separated by a comma. Each line of the file is a data record. You've almost certainly encountered a .csv file (perhaps in Excel), and we'll import one such file here to start our analysis. Note that R works with 'in-memory' data, meaning it loads and works with data directly from your computers memory (rather than a file on a disk drive).
 
 ## Base R
 
@@ -62,14 +73,14 @@ read_csv("my_csv_filename.csv")
 
 Note the substitution of `.` with `_`. Many of the `tidyverse` functions exist in base R. There are often good reasons to use the `tidyverse` implementation, especially if you're using a it later in the analysis. We won't go into these now (they have to do with data types), but a good tip to spotting a `tidyverse` function: almost all functions in `tidyverse` use the underscore in place of the more conventional period.
 
-## Arguments when importing data
+## Arguments
 
 In our earlier example, we did not explicitly set any of the arguments. While this works in most cases, there might be unexpected behaviour stemming from the use of defaults. We'll start with a simple one. Let's use `readr` to import our csv file.
 
 ``` {r}
 
 # import csv file
-survey_data <- read_csv("qualtrics_data.csv")
+survey_data <- read_csv("survey_data.csv")
 
 ```
 
@@ -87,7 +98,7 @@ The data looks as we'd expect it to. Each column is a variable - in this case a 
 ```{r}
 
 # read csv file without headers
-survey_data <- read_csv("qualtrics_data.csv", col_names = FALSE)
+survey_data <- read_csv("survey_data.csv", col_names = FALSE)
 
 # print first five rows
 head(survey_data, n = 5)
@@ -96,7 +107,7 @@ head(survey_data, n = 5)
 
 Something's up!? Notice how our headers are now `X1`, `X2` etc. And our actual header names are in the first row. That's because we told `readr` that our column names were not in the first row and it took us at our word. `tidyverse` tends to have seemingly logical defaults - more so than base R - but there are times when you'll want to interrogate the defaults to make sure things are working the way you expect. For reference, quickly scan all the possible arguments for `read_csv()` on the [help page](https://readr.tidyverse.org/reference/read_delim.html).
 
-## Exercise: import data
+### **Exercise:** import data
 
 Import the csv with the correct headers and print the first 10 rows of the data in the [Exercise 1](#exercise_1) code chunk. Make sure to give the object a name you'll remember - I recommend something explicit like `survey_data`.
 
@@ -111,7 +122,7 @@ Import the csv with the correct headers and print the first 10 rows of the data 
 ```
 
 
-# Data Types
+## Data types
 
 Last week we went over the theory of data types. You might remember words like integers or doubles or strings. These are how R understands the data you're working with at a low-level. It might not seem important but it really is. For example, `6` might look like a number to you but R could be storing it as a string. This becomes a problem if you wanted to add two "numbers" that are actually strings. Unfortunately, it's something you just have to learn over time. But we can point to a few clues to help you along the way. 
 
@@ -120,7 +131,7 @@ One key motivation for using `readr` over base R's csv import is that it makes a
 ```{r}
 
 # read csv file without headers
-survey_data <- read_csv("qualtrics_data.csv", col_names = TRUE)
+survey_data <- read_csv("survey_data.csv", col_names = TRUE)
 
 # print first five rows
 head(survey_data, n = 5)
@@ -132,7 +143,9 @@ head(survey_data, n = 5)
 We won't spend too much time interrogating these in our dataset right now, but we wanted to bring it to your attention for later.
 
 
-# Selecting Data
+# Data Wrangling
+
+## Selecting data
 
 We've imported our data into R and now we want to start to work with it. Let's quickly get an idea of what we are working with. I find myself using two arguments to do this: `dim()` and `summary()`.
 
@@ -154,7 +167,7 @@ summary(survey_data)
 
 ```
 
-## **Exercise:** column names
+### **Exercise:** column names
 A lot of the 'space' in the printout here are the headers (or column names), which in our dataset are the question strings. If we just wanted to know what those are we can use the `names()` function. Try that out in the [Exercise 2](#exercise_2) code chunk and see what it returns.
 
 ``` {r exercise_2}
@@ -164,7 +177,7 @@ A lot of the 'space' in the printout here are the headers (or column names), whi
 
 ```
 
-## `dplyr::select()`
+### `dplyr::select()`
 
 I find it hard to work with a dataframe that contains 100+ columns. Many others disagree, but I prefer to make a new dataframe containing only the columns that I need so I can visually inspect the data while preserving the original dataframe. To do that I use the `select()` function. The `select()` function is used to choose which *columns* you want to keep in your dataframe. More details about `select()` can be found at the [help page](https://dplyr.tidyverse.org/reference/select.html). Note: if you want to select which *rows* to keep then you would use another function - we'll get to that in a bit.
 
@@ -188,7 +201,7 @@ acoustics_data <- survey_data %>%
 
 There's a lot of text in the above code chunk, so let's break down what just happened. First, we assign the output of our code chunk to an object named `acoustics_data`. Then, we take our `survey_data` object and we "pipe" it (i.e. pass it to) the `select()` function. Within the `select()` function, we nominate the names of the five columns that we'd like to keep in our new dataframe.
 
-## Exercise: create new dataframe
+### **Exercise:** create new dataframe
 Include one more acoustics-related question in our new `acoustics_data` dataframe in the [Exercise 3](#exercise_3) code chunk. Tip: look for a question about *dissatisfaction* with the acoustic environment. Then inspect the dataframe using the `head()` function.
 
 ```{r exercise_3}
@@ -200,7 +213,7 @@ Include one more acoustics-related question in our new `acoustics_data` datafram
 ```
 
 
-# Renaming columns
+## Renaming columns
 
 While having the full question string as a column name makes sense initially, it becomes very clumsy working with such long names in code. There's also the added complications of having spaces in the column names, which should be avoided where possible. So to calm my nerves, we are going to quickly rename the columns so it's easier to work with in the subsequent code. 
 
@@ -225,7 +238,7 @@ acoustics_data <- acoustics_data %>%
 
 Note that the argument for `rename()` uses the syntax `new_name = old_name`. Inspect your dataframe and see what happened to the name of the first two columns. This is going to be much easier to work with moving forward because you won't have to wrap the column names in quotation marks when referring to them. 
 
-## **Exercise:** rename columns
+### **Exercise:** rename columns
 Rename the other columns using the above rules in the [Exercise 4](#exercise_4) code chunk. Make sure they are easy to understand as you'll have to remember them later on. For example, *"How satisfied are you with the... - Noise level in your workspace"* could become `noise_level`. And *"Overall, does the acoustic quality in your workspace enhance or interfere with your ability to get your job done?"* could become `overall_acoustics`.
 
 ``` {r exercise_4}
@@ -239,11 +252,11 @@ acoustics_data <- acoustics_data %>%
 ```
 
 
-# Filtering data
+## Filtering data
 
 We just learned how to select and rename columns from our dataframe. The `select()` function is column-wise, but what about selecting particular rows? This is known as filtering, and the `{dplyr}` package has a handy function for that too!
 
-## `dplyr::filter()`
+### `dplyr::filter()`
 
 Filtering is when you want to subset your data row-wise. This is useful if you only want to keep rows where a particular condition is met. For our dataset, each row is a survey respondent. One of the columns that we kept in the earlier section was the progress that each made respondent made through the survey. So a value of 100 means they completed the survey, while a value of 0 means they did not answer any questions. That seems like a good value to filter on! As always, more details about `filter()` can be found at the [help page](https://dplyr.tidyverse.org/reference/filter.html).
 
@@ -290,25 +303,25 @@ Much like the last filter, we reduced the length of the dataframe from 117 rows 
 
 **Side Quest:** the `{tidyr}` package has the `drop_na()` function. It is often easier to use that than to add a condition when filtering. See if you can combine `filter()` and `drop_na()` using pipes to reach the same result as we did in the above code chunk.
 
-# Summarising Data
+## Summarising data
 
 One of the first tasks you'll want to do with a new dataset is to provide simple summaries like counts (frequencies), averages, etc. These are almost always reported somewhere in your work, and are also a good opportunity for you (the analyst) to get early insights on the dataset. The `{tidyverse}` packages have a number of really useful functions to help summarise data. 
 
-## `dplyr::count()`
+### `dplyr::count()`
 
 The data we are working with is non-numeric, so we wouldn't use things like means and standard deviations. We're going to show you these things next week. For now, we'll start our analysis by simply counting the number of responses for each of the categories. Again, this is simple to do with `tidyverse` combined with the all-mighty `%>%` (pipe)! Let's count the number of different responses to our `noise_level` question.
 
 ``` {r}
 
 # count responses to acoustics question
-acoustics_data %>%
+noise_summary <- acoustics_data %>%
   count(noise_level)
 
 ```
 
 What happened here is that `{dplyr}` found all the unique values in the `noise_level` column and counted their occurrences. Simple! The arguments for `count()` are the columns that you wish to count the unique occurrences.
 
-##**Exercise:** counts
+### **Exercise:** counts
 
 Summarise the other columns using `count()` in the [Exercise 5](#exercise_5) code chunk. Try looking at the `dplyr::count()` [help page](https://dplyr.tidyverse.org/reference/count.html) to work out the correct syntax for the arguments.
 
@@ -318,11 +331,31 @@ Summarise the other columns using `count()` in the [Exercise 5](#exercise_5) cod
 
 ```
 
+### `dplyr::mutate()`
+
+The table showing the counts is nice, but what if we wanted to include the percentages as well as the counts? That would be a useful thing to do. In `tidyverse` parlance, adding a new column (or editing an existing one) is called mutating and is done with the `mutate()` function. You should use `mutate()` when you want to:
+
+1. Add a new column to your dataframe
+
+2. Modify (overwrite) an existing column in your dataframe
+
+Including the percentages in our table is an example of adding a column, and `mutate()` is going to help us with that. To do that, we will use `mutate()` and a little bit of arithmetic as follows.
+
+``` {r}
+
+# add percentages to summary table
+noise_summary <- noise_summary %>%
+  mutate(percentage = n / sum(n))
+
+```
+
+Take a look at the table and see if that worked. Great...we now have percentages as well as the counts for the different responses to our question about noise. The `mutate()` function is one you'll be using over and over, so I recommend reading the [help page](https://dplyr.tidyverse.org/reference/mutate.html) if you need a bit more context.
+
 But there's something bugging me about this table...
 
 **Question:** why is our summary table ordered the way it is?
 
-You've heard us keep blabbing on about data types and how important they are. Well, here's a practical example of that. Underneath the column header in the above table you'll see it says `<chr`. That is the clue you'd need to answer the question of why the table is ordered the way it is.
+You've heard us keep blabbing on about data types and how important they are. Well, here's a practical example of that. Underneath the column header in the above table you'll see it says `<chr>`. That is the clue you'd need to answer the question of why the table is ordered the way it is.
 
 
 # Factors
@@ -361,17 +394,16 @@ levels(acoustics_data$noise_level)
 
 ```
 
-## ``tidyverse`
-
-We've already told R that the responses are actually factors rather than characters. We can achieve the same thing in `tidyverse` with the added bonus of wrapping it up in one command. I'm going to do a bad thing here and use a function that I haven't explained yet. That function, `mutate()`, is part of `{dplyr}` and basically says "modify an existing column in this way or create a new column that is this" e.g. summing two columns together into a new variable. I'm skipping over it because Fede will go into greater detail next week. So ignore this piece for now and just focus on the factors.
+## `tidyverse`
+We've already told R that the responses are actually factors rather than characters. We can achieve the same thing in `tidyverse` with the added bonus of wrapping it up in one command. We're going to use our helpful new friend `mutate()` to modify the existing columns to convert them from a character to a factor.
 
 ``` {r}
 
 # convert response columns to factors
 acoustics_data <- acoustics_data %>%
-  mutate(noise_level = factor(noise_level),
-         sound_privacy = factor(sound_privacy),
-         overall_acoustics = factor(overall_acoustics))
+  mutate(noise_level = as.factor(noise_level),
+         sound_privacy = as.factor(sound_privacy),
+         overall_acoustics = as.factor(overall_acoustics))
 
 ```
 
@@ -380,7 +412,6 @@ Just to reiterate what happened - we took the `acoustics_data` object, mutated (
 **Side Quest:** if you want to modify a number of columns in exactly the same way, then check out the `across()` function combined with `mutate()`. Perfect for those obsessed with elegant, minimal code! Full details are [here](https://dplyr.tidyverse.org/reference/across.html).
 
 ## Factor levels
-
 Levels are the unique values within a factor. For example, the question "What is your marital status?" might have 3 levels of "Single", "Married" and "Divorced". Factors and levels are the ideal way to store responses to questions with a limited number of predefined options e.g. radio box questions. We've converted our questions to factors, each with 7 levels. Use `levels()` to remind yourself of what the factors are.
 
 We've successfully made the responses factors but we haven't yet solved the problem of the level order. The output of `levels()` is showing that the ordering of the responses is alphabetical, when we know there is a better way to order them. The `factor()` function has the `levels` argument where we can explicitly define the order of the levels. Here's an example.
@@ -400,8 +431,7 @@ acoustics_data <- acoustics_data %>%
 
 Check the levels of `noise_level` again and see what happened to the order. Success! R know knows that there is an order to the levels within our factor. This doesn't seem very important now but it will make your life so much easier when you come to visualize your results. It's also important if you come to do statistical tests, although you'd want to explore the `is.ordered()` argument if you find yourself there. For us, simply changing the order in which they are printed is sufficient.
 
-## **Exercise:** factor reordering
-
+### **Exercise:** factor reordering
 Change the order of the other columns in the [Exercise 6](#exercise_6) code chunk to better represent the underlying data. You can use the above code chunk as an example. Make sure to check the levels as the questions might use different scales.
 
 ``` {r exercise_6}  
@@ -411,3 +441,125 @@ Change the order of the other columns in the [Exercise 6](#exercise_6) code chun
 ```
 
 
+# Data Visualization
+
+This is why we are all here...to make sexy plots 👀 I don't need to explain what data visualizations are, but if you're needing a reminder of **how** visualizations can look beautiful as well as **why** it's important to do so then I recommend [Information is Beautiful](https://informationisbeautiful.net).
+
+One of the biggest strengths of R over other programming languages is the ability (and ease) to make very beautiful visualizations. And the best package for visualizations unsurprisingly comes from the `{tidyverse}`. It's known as `{ggplot2}` and is my favourite part of this entire enterprise. `{ggplot2}` is the workhorse for plotting tidy data, allowing you to make basically any kind of vizualisation you like. We're going to spend the remainder of today's class working in `{ggplot2}` to make a simple visualization of our survey data.
+
+## Grammar of Graphics
+The way that `{ggplot2}` works is based on a philosophy known as the "Grammar of Graphics". The book was originally published in 1999, well before `{ggplot2}` existed. But the book had such a big impact that it continues to inspire the way we visualize data today. I recommend reading it if the theory of data visualization interests you. For everyone else (myself included), there's the more practical [ggplot2 book](https://ggplot2-book.org/introduction.html) that has extensive documentation on using the `{ggplot2}` package.
+
+I don't want to spend too much time on the background piece, but what's most essential to understanding how "Grammar of Graphics" inspired `{ggplot2}` is the idea of *aesthetic layers*. Put simply, any visualization can be broken down into a number of discrete layers, each containing important aesthetic information relevant to interpreting the data. There are three grammatical elements that are important for today:
+
+1. Data: the data that you wish to plot
+
+2. Aesthetics: the scales onto which we *map* our data e.g. the x- and y-axis
+
+3. Geometries: the shape visual elements used in our plot e.g. bars, lines etc.
+
+You'll see reference to these elements throughout the `{ggplot2}` code. For example, `aes()` is the function to define the mapping of data. And `geom_` is used to specify the type fo plot you want e.g. `geom_bar()`.
+
+## `{ggplot2}`
+
+There are so many different types of data visualizations (I'll refer to them as plots) that you can make in `{ggplot2}`. I think the [R Graph Gallery](https://r-graph-gallery.com/ggplot2-package.html) provides a useful overview of many of the options as well as example code.
+
+**Question:** which kind of plot will work best with our data?
+
+Let's get into it! We start any plot with the `ggplot()` function. The two arguments of the `ggplot()` function are `data` and `mapping`. `data` is straightforward - it's just our dataframe that we've been working on. `mapping` is a bit more abstract, but basically contains the variables to include on the x- and y-axis. We're going to start with a stacked column graph of only one question, so we don't need to define our x-axis. We have our data ready, so our code to start our plot will look something like:
+
+``` {r}
+
+# start plot of noise level
+ggplot(data = acoustics_data, mapping = aes(y = noise_level))
+
+```
+
+Okay, something happened. We made something, but it doesn't really look like a data visualization. Actually, what we got is exactly what we expected. All we did in the earlier code is to ask for a plot (with the `ggplot()` function), point to the underlying data (with the `data = ` argument), and map some aesthetics (with the `mapping = aes()` argument). So far, so good.
+
+**Question:** what are we missing?
+
+## Adding layers
+
+Remember how we talked about plots being made up of a number of layers. We just made the base layer; that is, the plot itself! But we didn't define any additional layers. Probably the next most important layer will be the **geometry**. The geometry defines the *type* of plot that we'd like to make. For this example we are going to make a bar chart, so we're going to include the `geom_bar()` function to our `ggplot()` code. There's a helpful overview of the geometries [here](https://ggplot2.tidyverse.org/reference/).
+
+Before we do that, it's worth working through the syntax of layers in `{ggplot2}`. We've been using the pipe `%>%` throughout the data wrangling exercises as a way to join commands together. It would seem logical that the same syntax is used to add layers of a plot together. **However**, in `{ggplot}` we use a different snytax which is easy to understand but also easy to forget. To combine layers we simply use `+`. Think of the concept of *adding* layers together to make a plot. You'll likely confuse this with `%>%` as you're learning how to use all these new tools - that's totally okay!
+
+Coming back to our bar chart, let's add our geometry to the plot.
+
+```{r}
+
+# start plot of noise level and add geometry
+ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
+  geom_bar()
+
+```
+
+We did it...we made our first plot 😍 It's not the most beautiful thing in the world, but it visually represents the underlying data! As such, we could stop there and be done with it. But we want to make it a bit more appealing, so let's walk through *some* of the options available to us in `{ggplot2}`.
+
+## Labels
+
+One of the simplest things you can do is change the labels. This includes the title and axis labels. You can do these individually, but there's a helpful `{ggplot2}` function `labs()` which combines them all into one. The arguments are the element you're wanting to change, and the values are the strings to use. Let's change our x- and y-axis labels, and add a title to our plot. Remember, we add layers using `+`.
+
+```{r}
+
+# start plot, add geometry, and change labels
+ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
+  geom_bar() +
+  labs(title = "My First Plot", subtitle = "Satisfaction with the noise level in the office",
+       x = "Response Count", y = NULL)
+
+```
+
+**Question:** what do you think `NULL` is doing here?
+
+## Themes
+
+`{ggplot2}` does a good job of making a plot without much work. But there are many cases where we'd want to change the look of the plot. Thankfully, there are inbuilt themes that we can use to quickly change the look of a plot. There's a helpful [list of themes](https://ggplot2.tidyverse.org/reference/ggtheme.html) on the `{ggplot2}` website.
+
+### **Exercise:** plot theme
+Apply `theme_classic()` to your plot in the [Exercise 7](#exercise_7) code chunk.
+
+``` {r exercise_7}  
+
+# define the theme of your plot
+
+```
+
+Nice one! That's one step closer to the plot of our dreams. It's often helpful to use the default themese to get *close* to the look you're after, and then modify individual elements to suit. Tweaking plots can be an exhaustive and time-consuming process, so we won't spend much time on it today. But to do so, you use the `theme()` function, with each argument defining some aspect of the plot. As an example, we'll turn remove the y-axis line, disable tick marks, and add break lines on the x-axis.
+
+```{r}
+
+# remove y-axis line and ticks
+ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
+  geom_bar() +
+  labs(title = "My First Plot", subtitle = "Satisfaction with the noise level in the office",
+       x = "Response Count", y = NULL) +
+  theme_classic() +
+  theme(axis.line.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_line())
+
+```
+
+### Colours
+
+One thing that always changes with a plot are the colours! It's not uncommon for me to spend 30-minutes just getting the colours right for a plot. The more complex and detailed the plot, the harder it is to define a colour palette. Colours are defined in `{ggplot2}` using hex codes, which are a simple alphanumeric string of 6 characters with a hash prefix e.g. `#f568d2`. Obviously I never know what the hex code of the colour I want is, so I use [coolors](https://coolors.co) to help find colours and copy their hex code into my plot. To change the colour of our bars, we need to define it in the `fill` argument of `geom_bar()`.
+
+```{r}
+
+# remove y-axis line and ticks
+ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
+  geom_bar(fill = "#D2AFE9") +
+  labs(title = "My First Plot", subtitle = "Satisfaction with the noise level in the office",
+       x = "Response Count", y = NULL) +
+  theme_classic() +
+  theme(axis.line.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_line())
+
+```
+
+# Your Turn
+
+Okay it's your turn to go explore `{ggplot2}`. 
