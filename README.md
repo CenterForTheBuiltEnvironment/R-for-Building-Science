@@ -28,7 +28,9 @@ In this class you’ll learn how to analyse responses to survey questions. We’
 - Engel, C. (2021) Data Wrangling with R 
 - RStudio Cheatsheets for dplyr, tidyr, stringr, and forcats
 
-## Week 3 April 22 - During the class will be shown how to work with date and time with R. We will use the Tidyverse programming style and deepen the Lubridate library tools to: 
+## Week 3 April 22 - Timeseries data
+
+During the class will be shown how to work with date and time with R. We will use the Tidyverse programming style and deepen the Lubridate library tools to: 
 
 1) describe a date-time object properties (e.g. format, time-zone, etc.); 
 2) create a date-time object for time series analysis in R; 
