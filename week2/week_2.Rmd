@@ -303,61 +303,6 @@ Much like the last filter, we reduced the length of the dataframe from 117 rows 
 
 **Side Quest:** the `{tidyr}` package has the `drop_na()` function. It is often easier to use that than to add a condition when filtering. See if you can combine `filter()` and `drop_na()` using pipes to reach the same result as we did in the above code chunk.
 
-## Summarising data
-
-One of the first tasks you'll want to do with a new dataset is to provide simple summaries like counts (frequencies), averages, etc. These are almost always reported somewhere in your work, and are also a good opportunity for you (the analyst) to get early insights on the dataset. The `{tidyverse}` packages have a number of really useful functions to help summarise data. 
-
-### `dplyr::count()`
-
-The data we are working with is non-numeric, so we wouldn't use things like means and standard deviations. We're going to show you these things next week. For now, we'll start our analysis by simply counting the number of responses for each of the categories. Again, this is simple to do with `tidyverse` combined with the all-mighty `%>%` (pipe)! Let's count the number of different responses to our `noise_level` question.
-
-``` {r}
-
-# count responses to acoustics question
-noise_summary <- acoustics_data %>%
-  count(noise_level)
-
-```
-
-What happened here is that `{dplyr}` found all the unique values in the `noise_level` column and counted their occurrences. Simple! The arguments for `count()` are the columns that you wish to count the unique occurrences.
-
-### **Exercise:** counts
-
-Summarise the other columns using `count()` in the [Exercise 5](#exercise_5) code chunk. Try looking at the `dplyr::count()` [help page](https://dplyr.tidyverse.org/reference/count.html) to work out the correct syntax for the arguments.
-
-``` {r exercise_5}
-
-# count the responses for the other questions
-
-```
-
-### `dplyr::mutate()`
-
-The table showing the counts is nice, but what if we wanted to include the percentages as well as the counts? That would be a useful thing to do. In `tidyverse` parlance, adding a new column (or editing an existing one) is called mutating and is done with the `mutate()` function. You should use `mutate()` when you want to:
-
-1. Add a new column to your dataframe
-
-2. Modify (overwrite) an existing column in your dataframe
-
-Including the percentages in our table is an example of adding a column, and `mutate()` is going to help us with that. To do that, we will use `mutate()` and a little bit of arithmetic as follows.
-
-``` {r}
-
-# add percentages to summary table
-noise_summary <- noise_summary %>%
-  mutate(percentage = n / sum(n))
-
-```
-
-Take a look at the table and see if that worked. Great...we now have percentages as well as the counts for the different responses to our question about noise. The `mutate()` function is one you'll be using over and over, so I recommend reading the [help page](https://dplyr.tidyverse.org/reference/mutate.html) if you need a bit more context.
-
-But there's something bugging me about this table...
-
-**Question:** why is our summary table ordered the way it is?
-
-You've heard us keep blabbing on about data types and how important they are. Well, here's a practical example of that. Underneath the column header in the above table you'll see it says `<chr>`. That is the clue you'd need to answer the question of why the table is ordered the way it is.
-
-
 # Factors
 
 So far we've been working with `integer` (progress column) and `character` (responses) data types. We haven't had too many issues, but now is the perfect time to introduce the `factor` data type. Factors are used to categorize data i.e. categorical data. An example of categorical data is gender, where there are a limited number of unique categories. Factors can be unordered (e.g. gender) or ordered (e.g. "Very Dissatisfied" is worse than "Satisfied"). Factors are stored as 'levels' and can be applied to both integers and characters in R. All of these attributes make factors an incredibly useful data type when working with survey data.
@@ -432,14 +377,81 @@ acoustics_data <- acoustics_data %>%
 Check the levels of `noise_level` again and see what happened to the order. Success! R know knows that there is an order to the levels within our factor. This doesn't seem very important now but it will make your life so much easier when you come to visualize your results. It's also important if you come to do statistical tests, although you'd want to explore the `is.ordered()` argument if you find yourself there. For us, simply changing the order in which they are printed is sufficient.
 
 ### **Exercise:** factor reordering
-Change the order of the other columns in the [Exercise 6](#exercise_6) code chunk to better represent the underlying data. You can use the above code chunk as an example. Make sure to check the levels as the questions might use different scales.
+Change the order of the other columns in the [Exercise 5](#exercise_5) code chunk to better represent the underlying data. You can use the above code chunk as an example. Make sure to check the levels as the questions might use different scales.
 
-``` {r exercise_6}  
+``` {r exercise_5}  
 
 # define the level order for the other questions
 
 ```
 
+## Summarising data
+
+One of the first tasks you'll want to do with a new dataset is to provide simple summaries like counts (frequencies), averages, etc. These are almost always reported somewhere in your work, and are also a good opportunity for you (the analyst) to get early insights on the dataset. The `{tidyverse}` packages have a number of really useful functions to help summarise data. 
+
+### `dplyr::count()`
+
+The data we are working with is non-numeric, so we wouldn't use things like means and standard deviations. We're going to show you these things next week. For now, we'll start our analysis by simply counting the number of responses for each of the categories. Again, this is simple to do with `tidyverse` combined with the all-mighty `%>%` (pipe)! Let's count the number of different responses to our `noise_level` question.
+
+``` {r}
+
+# count responses to acoustics question
+noise_summary <- acoustics_data %>%
+  count(noise_level)
+
+```
+
+What happened here is that `{dplyr}` found all the unique values in the `noise_level` column and counted their occurrences. Simple! The arguments for `count()` are the columns that you wish to count the unique occurrences.
+
+### **Exercise:** counts
+
+Summarise the other columns using `count()` in the [Exercise 6](#exercise_6) code chunk. Try looking at the `dplyr::count()` [help page](https://dplyr.tidyverse.org/reference/count.html) to work out the correct syntax for the arguments.
+
+``` {r exercise_6}
+
+# count the responses for the other questions
+
+```
+
+### `dplyr::mutate()`
+
+The table showing the counts is nice, but what if we wanted to include the percentages as well as the counts? That would be a useful thing to do. In `tidyverse` parlance, adding a new column (or editing an existing one) is called mutating and is done with the `mutate()` function. You should use `mutate()` when you want to:
+
+1. Add a new column to your dataframe
+
+2. Modify (overwrite) an existing column in your dataframe
+
+Including the percentages in our table is an example of adding a column, and `mutate()` is going to help us with that. To do that, we will use `mutate()` and a little bit of arithmetic as follows.
+
+``` {r}
+
+# add percentages to summary table
+noise_summary <- noise_summary %>%
+  mutate(percs = n / sum(n))
+
+```
+
+Take a look at the table and see if that worked. Great...we now have percentages as well as the counts for the different responses to our question about noise. The `mutate()` function is one you'll be using over and over, so I recommend reading the [help page](https://dplyr.tidyverse.org/reference/mutate.html) if you need a bit more context.
+
+But there's something bugging me about this table...
+
+**Question:** why is our summary table ordered the way it is?
+
+You've heard us keep blabbing on about data types and how important they are. Well, here's a practical example of that. Underneath the column header in the above table you'll see it says `<chr>`. That is the clue you'd need to answer the question of why the table is ordered the way it is.
+
+
+# Power of the `%>%`
+
+We just worked through a series of steps where we imported the survey responses, wrangled the data, and made sure the data types were correct for any subsequent analysis. Go us! We did this through a series of commands that broke down the workflow into discrete steps. But...do we need to do this with separate commands? Now is a good time to demonstrate the power of the pipe! Our famous workhorse `%>%` can combine all these steps into one so that we spend less time cleaning and more time doing other more exciting stuff. 
+
+### **Exercise:** data wrangling
+String together the data importing and wrangling tasks together into one command in the [Exercise 7](#exercise_7) code chunk. You can copy-paste some of the above code into one command connected with `%>%` that does all the tedious work.
+
+``` {r exercise_7}  
+
+# use %>% to connect the data import and wrangling tasks into one command
+
+```
 
 # Data Visualization
 
@@ -481,9 +493,9 @@ Okay, something happened. We made something, but it doesn't really look like a d
 
 ## Adding layers
 
-Remember how we talked about plots being made up of a number of layers. We just made the base layer; that is, the plot itself! But we didn't define any additional layers. Probably the next most important layer will be the **geometry**. The geometry defines the *type* of plot that we'd like to make. For this example we are going to make a bar chart, so we're going to include the `geom_bar()` function to our `ggplot()` code. There's a helpful overview of the geometries [here](https://ggplot2.tidyverse.org/reference/).
+Remember how we talked about plots being made up of a number of layers. We just made the base layer; that is, the plot itself! But we didn't define any additional layers. Probably the next most important layer will be the **geometry**. The geometry defines the *type* of plot that we'd like to make. For this example we are going to make a bar chart, so we're going to include the `geom_bar()` function to our `ggplot()` code.
 
-Before we do that, it's worth working through the syntax of layers in `{ggplot2}`. We've been using the pipe `%>%` throughout the data wrangling exercises as a way to join commands together. It would seem logical that the same syntax is used to add layers of a plot together. **However**, in `{ggplot}` we use a different snytax which is easy to understand but also easy to forget. To combine layers we simply use `+`. Think of the concept of *adding* layers together to make a plot. You'll likely confuse this with `%>%` as you're learning how to use all these new tools - that's totally okay!
+Before we do that, it's worth working through the syntax of layers in `{ggplot2}`. We've been using the pipe `%>%` throughout the data wrangling exercises as a way to join commands together. It would seem logical that the same syntax is used to add layers of a plot together. **However**, in `{ggplot}` we use a different syntax which is easy to understand but also easy to forget. To combine layers we simply use `+`. Think of the concept of *adding* layers together to make a plot. You'll likely confuse this with `%>%` as you're learning how to use all these new tools - that's totally okay!
 
 Coming back to our bar chart, let's add our geometry to the plot.
 
@@ -518,15 +530,15 @@ ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
 `{ggplot2}` does a good job of making a plot without much work. But there are many cases where we'd want to change the look of the plot. Thankfully, there are inbuilt themes that we can use to quickly change the look of a plot. There's a helpful [list of themes](https://ggplot2.tidyverse.org/reference/ggtheme.html) on the `{ggplot2}` website.
 
 ### **Exercise:** plot theme
-Apply `theme_classic()` to your plot in the [Exercise 7](#exercise_7) code chunk.
+Apply `theme_classic()` to your plot in the [Exercise 8](#exercise_8) code chunk.
 
-``` {r exercise_7}  
+``` {r exercise_8}  
 
 # define the theme of your plot
 
 ```
 
-Nice one! That's one step closer to the plot of our dreams. It's often helpful to use the default themese to get *close* to the look you're after, and then modify individual elements to suit. Tweaking plots can be an exhaustive and time-consuming process, so we won't spend much time on it today. But to do so, you use the `theme()` function, with each argument defining some aspect of the plot. As an example, we'll turn remove the y-axis line, disable tick marks, and add break lines on the x-axis.
+Nice one! That's one step closer to the plot of our dreams. It's often helpful to use the default themes to get *close* to the look you're after, and then modify individual elements to suit. Tweaking plots can be an exhaustive and time-consuming process, so we won't spend much time on it today. But to do so, you use the `theme()` function, with each argument defining some aspect of the plot. As an example, we'll turn remove the y-axis line, disable tick marks, and add break lines on the x-axis.
 
 ```{r}
 
@@ -542,7 +554,7 @@ ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
 
 ```
 
-### Colours
+## Colours
 
 One thing that always changes with a plot are the colours! It's not uncommon for me to spend 30-minutes just getting the colours right for a plot. The more complex and detailed the plot, the harder it is to define a colour palette. Colours are defined in `{ggplot2}` using hex codes, which are a simple alphanumeric string of 6 characters with a hash prefix e.g. `#f568d2`. Obviously I never know what the hex code of the colour I want is, so I use [coolors](https://coolors.co) to help find colours and copy their hex code into my plot. To change the colour of our bars, we need to define it in the `fill` argument of `geom_bar()`.
 
@@ -560,6 +572,67 @@ ggplot(data = acoustics_data, mapping = aes(y = noise_level)) +
 
 ```
 
-# Your Turn
+## Geometry
 
-Okay it's your turn to go explore `{ggplot2}`. 
+We talked a bit about the geometries of a plot; that is, the shape. In the earlier example we were working with `geom_bar()`, which is a type of a bar chart. We got the plot to work to a point where we could reasonably expect someone to be able to interpret the underlying data. But there are probably better ways for us to visualize this data. There's a helpful overview of the geometries [here](https://ggplot2.tidyverse.org/reference/). Let's quickly explore a tweak to our geometry which might communicate our message more clearly. Specifically, I'm thinking of a *stacked* bar chart. 
+
+Remember we made a simple summary table of our noise level question that included the percentage of votes? You probably named the object `noise_summary`. Let's use that to make our stacked bar chart which shows the percentages rather than the absolute number of votes. We named our column `percs` which we'll map to our y-axis.
+
+``` {r}
+
+# make a stacked bar chart
+ggplot(noise_summary, aes(x = 1, y = percs, fill = noise_level)) +
+  geom_bar(position = position_fill(), stat = "identity") +
+  coord_flip()
+
+```
+
+Note three important things here:
+
+1. We didn't write out the argument names. We don't have to in most cases as R is smart enough to work out which is which if they are in the right order.
+
+2. We used the `position` and `stat` arguments in `geom_bar()` to tell it to stack the votes (position) and leave the data as is rather than using the default count (stat).
+
+3. We added `coord_flip()` so the bar runs horizontal rather than vertical.
+
+Finally, let's prettify it a bit. I won't explain what is going on here - it's more for your reference to follow up on in your own time.
+
+``` {r}
+
+# prettify our stacked bar chart
+ggplot(noise_summary, aes(x = 1, y = percs, fill = noise_level)) +
+  geom_bar(position = position_fill(reverse = TRUE), stat = "identity", width = 0.05) +
+  geom_text(aes(label = scales::percent(percs, accuracy = 1L)), 
+            position = position_stack(vjust = 0.5, reverse = TRUE),
+            colour = "grey20") +
+  scale_x_continuous(limits = c(0.9, 1.10)) +
+  scale_y_continuous(expand = c(0, 0), breaks = c(0.25, 0.5, 0.75), labels = c("25%", "50%", "75%")) +
+  scale_fill_manual(values = c("#ba3b50", "#cf6b61", "#d09da9", "grey85", "#c2e8bb", "#8bcc8a", "#4cb15e")) +
+  labs(title = "Office Noise Level", 
+       subtitle = "Breakdown of 112 responses to questions about satisfaction with noise level",
+       x = NULL, y = NULL, fill = NULL) +
+  guides(fill = guide_legend(label.position = "bottom", nrow = 1)) +
+  coord_flip() +
+  theme_minimal(base_size = 10) +
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(size = 11, face = "italic", hjust = 0.5),
+        axis.text = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "bottom",
+        legend.direction = "horizontal")
+
+```
+
+## **Exercise:** another geom
+
+We've used `geom_bar()` so far to plot our data. Let's try using `geom_point()` in the [Exercise 9](#exercise_9) code chunk to see if there is a relationship between noise level and one other question. Tip: define one question as x and the other as y in the aesthetic mapping.
+
+``` {r exercise_9}  
+
+# define the theme of your plot
+
+```
+
+# `{tidyverse}` AMA
+
+Okay I think we've covered most of the basics today. Now I'm going to hand it over to you to play around with the data, try to do things, inevitably break it, and then ask us what went wrong 🤠
