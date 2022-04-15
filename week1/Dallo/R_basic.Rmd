@@ -224,7 +224,7 @@ if (test_nr %% 2 == 0) {
 for ( i in seq(1,5,1) ) { #try (1,6,2)
   print(i)
 }
-````
+```
 
 ```{r}
 for ( i in c(1,3,5,7,12) ) {
@@ -275,7 +275,7 @@ The reason why "=" should be avoided is cause it is mathematically incorrect in 
 i <- 1
 while (i <= 5) {
   print(i)
-  i <- i + 1 # we saw this before!
+  i <- i + 1 # we saw this before! "i = i + 1" is a bit weird..
 }
 ```
 
@@ -300,7 +300,7 @@ fede_age <- (lubridate::year(Sys.time()) - 1989) # guess what is this constant..
 
 # Functions
 
-We can create our functions... be carefull that the chance that some function (optimized) already exist.. is high! Better to read the documentation.. I'll show a good example on week3.
+We can create our functions... be careful that the chance that some function (optimized) already exist.. is high! Better to read the documentation.. I'll show a good example on week3.
 
 Here an example of a really futile function.. with also a terrible name.. 
 
@@ -310,7 +310,7 @@ my_function <- function() { # create a function with the name my_function
 }
 ```
 
-This function still exist.. any guess??
+This function already exist.. any guess??
 
 ## Here another interesting creature:
 
@@ -346,7 +346,7 @@ expand.grid(rep(list(1:3),3)) # permutations with repetitions ! n^k
 
 ## Excercise
 
-Goal: Calculate O3 concentration in ppb and ug/m3
+Goal: Calculate O3 (ozone, a pollutant reactive gas) concentration in ppb and ug/m3
 
 Data:
 

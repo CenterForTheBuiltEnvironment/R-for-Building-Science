@@ -1,13 +1,67 @@
 ---
 title: "4_forecast"
-author: "Federico Dallo"
-date: "3/3/2022"
-output: html_document
+author: "Fede Dallo"
+date: "4/15/2022"
+#output: html_document
+output:
+  #bookdown::html_document2: default
+  html_notebook:
+    highlight: tango
+    mathjax: null
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    
+
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse) # Tom's favourite library ;)
+library(lubridate) # In the Tidy universe a real shiny library to do time series analysis
+library(here) # This library allows you to simplify organizing project files and directories
+#library(rvest) # Not mandatory for the class, but we can use this library to get file from internet. 
 ```
+
+# Global options
+
+When you start a project is good practice to set up the project directory
+
+```{r}
+here::i_am("ARCH 249 Module 3.Rproj")
+```
+
+
+# Optional: Using wget to get data files from NOAA
+
+## Using rvest
+
+## Using "bash" and "wget"
+
+```{bash}
+# bash daemon is being summoned in the directory from where is called:
+# in this case it is called from the file "4_forecast.Rmd" that is in the "/docs" directory
+
+# change into "data" directory
+cd ../data
+pwd
+
+for index in {11..20}
+
+do
+    FILE=ftpc1h20$index.txt.gz
+    
+    if [ -f "$FILE" ]; then
+        echo "$FILE exists."
+    else
+        echo "$FILE does not exist. Downloading"
+        /opt/homebrew/bin/wget https://www.ndbc.noaa.gov/data/historical/stdmet/ftpc1h20$index.txt.gz
+    fi
+    
+done
+```
+
 
 # Forecast
 

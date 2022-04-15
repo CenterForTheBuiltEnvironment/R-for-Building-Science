@@ -5,9 +5,12 @@ library(tidyverse)
 library(lubridate)
 library(tsibble)
 library(tsibbledata)
+library(rvest)
 
 # Following Forecasting: Principles and Practice book
 # https://otexts.com/fpp3/tsibbles.html
+
+https://www.ndbc.noaa.gov/data/historical/stdmet/ftpc1h2019.txt.gz
 
 # --- tsibble --- #
 
