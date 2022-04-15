@@ -33,7 +33,14 @@ here::i_am("ARCH 249 Module 3.Rproj")
 ```
 
 
-# Optional: Using wget to get data files from NOAA
+
+
+# Optional: Get data files from NOAA
+
+In the class you've been used a dataset that I've prepared. But, what if you want to perform 
+your analysis? 
+
+A great source of meteorological data is <https://www.ndbc.noaa.gov/>
 
 ## Using rvest
 
@@ -62,70 +69,6 @@ do
 done
 ```
 
-
-# Forecast
-
-Reference: <https://otexts.com/fpp3/>
-
-The predictability of an event or a quantity depends on several factors including:
-
-1- how well we understand the factors that contribute to it;
-2- how much data is available;
-3- how similar the future is to the past;
-4- whether the forecasts can affect the thing we are trying to forecast.
-
-### Example 4.1
-
-Predict tomorrow sunrise, predict tomorrow lotto numbers
-
-"Once it has been determined what forecasts are required, it is then necessary to find or collect the data on which the forecasts will be based. The data required for forecasting may already exist. These days, a lot of data are recorded, and the forecaster’s task is often to identify where and how the required data are stored. The data may include sales records of a company, the historical demand for a product, or the unemployment rate for a geographic region. A large part of a forecaster’s time can be spent in locating and collating the available data prior to developing suitable forecasting methods."
-
-## Qualitative forecasting
-
-When there are no data and we have to find a better than "guesswork".
-
-## Quantitative forecasting
-
-When:
-
-- numerical information about the past is available;
-- it is reasonable to assume that some aspects of the past patterns will continue into the future.
-
-### Regular and Irregular spaced time series
-
-How to fill the gap in missing data?
-
-## tsibble
-
-Index variable Month, and the keys Concession and Type, would be returned **even if they were not explicitly selected** as they are required for a tsibble (to ensure each row contains a unique combination of keys and index)
-
-## Time Plots
-
-```{r}
-meteo_01M %>%
-  select(dttyDatetime, mean_T_C) %>%
-  #filter(mean_T_C > -20) %>%
-  ##FEDE## create daily average data:
-  mutate(YEAR = lubridate::year(dttyDatetime),
-         MONTH = lubridate::month(dttyDatetime),
-         DAY = lubridate::day(dttyDatetime)
-         ) %>%
-  group_by(YEAR, MONTH, DAY) %>%
-  summarise(DATE = lubridate::floor_date(x = mean(dttyDatetime, na.rm=TRUE), unit = "day"),
-         TEMPERATURE = mean(mean_T_C, na.rm = T)
-         ) %>%
-  ungroup() %>%
-  select(DATE, TEMPERATURE) %>%
-  #nrow()
-  ##FEDE## plot:
-  ggplot(data = ., aes(x = DATE, y = TEMPERATURE)) +
-  geom_line() + 
-  geom_point()
-```
-
-
-
-  
 
 
 
