@@ -24,14 +24,17 @@ library(here) # This library allows you to simplify organizing project files and
 #library(rvest) # Not mandatory for the class, but we can use this library to get file from internet. 
 ```
 
-# Global options
+# Global Project Options
 
-When you start a project is good practice to set up the project directory
+When you start a project is good practice to use ``here::i_am("<TypeProjectName>")`` to set up the top-level project directory. The base-R command to do that is ``setwd()``, but this is fragile as it is operating system dependent as well as filesystem (absdolute and relative) dependent.
 
-```{r}
+More info: <https://here.r-lib.org>
+
+```{r, echo=TRUE}
 here::i_am("ARCH 249 Module 3.Rproj")
 ```
 
+# Importing Data
 
 
 
