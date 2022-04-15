@@ -1,1 +1,4 @@
 *.txt
+
+# ignoring a directory where to put unzipped files
+tmp/
