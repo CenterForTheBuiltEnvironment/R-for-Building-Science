@@ -20,13 +20,8 @@ output:
 # set global settings to hide console messages from markdown document
 knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE)
 
-# use package manager
-require("pacman")
-
-# load necessary packages
-pacman::p_load(tidyverse, janitor, # data wrangling 
-               knitr, # produce markdown documents
-               patchwork, scales) # plotting
+# load tidyverse package
+library("tidyverse")
 
 ```
 
