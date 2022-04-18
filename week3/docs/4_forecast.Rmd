@@ -78,7 +78,18 @@ done
 ### Prepare the data for analysis
 
 ```{r}
-
+data_dir <- here("week3", "data", "tmp")
+setwd(data_dir)
+file_list <- Sys.glob("ftpc1h****.txt")
+output_recombined_file <- file.create("recombined_ftpc1h.txt")
+output_recombined_file <- file("recombined_ftpc1h.txt", "r+")
+for (i in file_list) {
+  input <- readLines(i)
+  input <- input[-c(1,2)] # delete 1st line of the header
+  #input <- input[-c(1)] # delete 2nd line of the header
+  writeLines(input, output_recombined_file)
+}
+close(output_recombined_file)
 ```
 
 
