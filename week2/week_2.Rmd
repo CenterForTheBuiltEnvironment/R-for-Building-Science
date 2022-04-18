@@ -18,15 +18,10 @@ output:
 ```{r setup, include = FALSE}
 
 # set global settings to hide console messages from markdown document
-knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE)
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE)
 
-# use package manager
-require("pacman")
-
-# load necessary packages
-pacman::p_load(tidyverse, janitor, # data wrangling 
-               knitr, # produce markdown documents
-               patchwork, scales) # plotting
+# load tidyverse package
+library("tidyverse")
 
 ```
 
@@ -622,6 +617,18 @@ ggplot(noise_summary, aes(x = 1, y = percs, fill = noise_level)) +
         legend.direction = "horizontal")
 
 ```
+
+## Saving plots
+
+Once you've got your sexy plot, you're probably going to want to save it to your drive for later use. This is easy to do with ggplot using the `ggsave()` function. This is preferable over exporting from the plot preview as you have control over the dimensions and resolutions of the plot. The arguments in `ggsave()` are the width and height (defaults to inches) which you can use to properly proportion your plot.
+
+``` {r}
+
+# save plot to working directory
+ggsave("my_plot_name.png", width = 7, height = 4, dpi = 300)
+
+```
+
 
 ## **Exercise:** another geom
 
