@@ -33,3 +33,4 @@ vignettes/*.pdf
 .Renviron
 README.html
 TimeSeriesR.Rproj
+.DS_Store
