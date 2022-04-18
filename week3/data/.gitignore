@@ -1,4 +1,4 @@
 *.txt
-
+.DS_Store
 # ignoring a directory where to put unzipped files
 tmp/
