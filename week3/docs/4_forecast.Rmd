@@ -38,16 +38,18 @@ here::i_am("ARCH 249 Module 3.Rproj")
 
 
 
-# Optional: Get data files from NOAA
+# Optional
+
+## Get data files from NOAA
 
 In the class you've been used a dataset that I've prepared. But, what if you want to perform 
 your analysis? 
 
 A great source of meteorological data is <https://www.ndbc.noaa.gov/>
 
-## Using rvest
+### Using rvest
 
-## Using "bash" and "wget"
+### Using "bash" and "wget"
 
 ```{bash}
 # bash daemon is being summoned in the directory from where is called:
@@ -73,8 +75,11 @@ done
 ```
 
 
+### Prepare the data for analysis
 
+```{r}
 
+```
 
 
 
