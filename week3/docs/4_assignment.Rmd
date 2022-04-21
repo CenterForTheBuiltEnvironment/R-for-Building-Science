@@ -1,0 +1,44 @@
+---
+title: "Time Series Assignment"
+author: "Fede Dallo"
+date: "4/15/2022"
+#output: html_document
+output:
+  #bookdown::html_document2: default
+  html_notebook:
+    highlight: tango
+    mathjax: null
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+---
+
+# Objective
+
+- Make use of R `tidyverse` and `lubridate` functions to wrangling time-series data for the purpose of visualization
+- Use `ggplot()` to produce time-series data visualizations
+- Experiment with elements of `ggplot()` to improve the plot readability
+
+# Requirements:
+
+Produce two ggplot data visualizations. For the first plot use the same meteorological time-series data-set of San Francisco provided during the class to produce one of the following analysis and relative plot: 
+
+-  
+- Monty
+Daily plot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

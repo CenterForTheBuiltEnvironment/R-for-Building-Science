@@ -59,11 +59,19 @@ tmp_df_SF %>%
   ggplot(data = ., aes(x = TIME, y = ATMP)) + 
   geom_point() +
   theme_classic()
+
+# make data as character :) to increase difficulty
+
+tmp_df_SF <- tmp_df_SF %>%
+  mutate(TIME = as.character(TIME)) %>%
+  glimpse()
   
 saveRDS(object = tmp_df_SF, 
-        file = "meteo_SF_FTPC1_2011-2020.rds", 
+        file = "week3/data/tmp/meteo_SF_FTPC1_2011-2020.rds", 
         compress = "gzip")
 
+# file.copy(from = "week3/data/tmp/meteo_SF_FTPC1_2011-2020.rds", 
+#           to = "week3/data/meteo_SF_FTPC1_2011-2020.rds", overwrite = TRUE)
 
 
 

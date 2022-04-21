@@ -1,0 +1,739 @@
+---
+title: "Time Series"
+author: "Fede Dallo"
+date: "4/15/2022"
+#output: html_document
+output:
+  #bookdown::html_document2: default
+  html_notebook:
+    highlight: tango
+    mathjax: null
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+    
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse) # Tom's favourite library ;)
+library(lubridate) # In the Tidy universe THE library to work with time
+library(here) # This library allows you to simplify organizing project files and directories
+#library(rvest) # Not mandatory for the class, but we can use this library to get file from internet. 
+```
+
+# Global Project Options
+
+When you start a project is good practice to use ``here::i_am("<TypeProjectName>")`` to set up the top-level project directory. The base-R command to do that is ``setwd()``, but this is fragile as it is operating system dependent as well as filesystem (absdolute and relative) dependent.
+
+More info: <https://here.r-lib.org>
+
+```{r, include=FALSE}
+here::i_am("ARCH 249 Module 3.Rproj")
+```
+
+# Importing Data
+
+We will use meteorological data set from National Oceanic and Atmospheric Administration (NOAA). NOAA is an agency under the U.S. Dept. of Commerce that provides lots of data and information related to Climate. Go take a look at: <https://www.noaa.gov>. 
+
+Given we are in the San Francisco Bay Area, we might want to work on some local meteorological data. I've selected the Station FTPC1 - 9414290 
+- San Francisco, CA (37.806 N 122.466 W) and *prepared* a time-series containing measurement on: 
+- Wind Direction ("WDIR") 
+- Wind Speed ("WSPD")
+- Atmospheric Pressure ("PRES")
+- Atmospheric Temperature ("ATMP")
+
+The time-series is in `week3/data` directory and the file name is `meteo_SF_FTPC1_2011-2020.rds`. A `rds` file is a native data formats in R. It is a serialized object that, compared to a `csv` occupy less space on drive.
+
+Import the file in memory and assign it into the variable `meteo_df`:
+
+```{r}
+#meteo_df <- read_rds(file = "week3/data/meteo_SF_FTPC1_2011-2020.rds")
+meteo_df <- read_rds(file = here("week3", "data", "meteo_SF_FTPC1_2011-2020.rds"))
+```
+
+Note that we used the *function* `read_rds` with the *file-name* as the function *argument*. The *file-name* is the output of the function `here()`. Which are the argument in this case?
+
+Once data are imported we can check some of the data-set characteristics:
+
+## Dataset inspection
+
+### dim()
+
+Use `dim()` command to get information on `meteo_df` dimensions:
+
+```{r}
+dim(meteo_df)
+```
+
+The output of the command gives you the number of *rows* and *columns*. Remember that you can *execute* `?dim` in the *Console* to open the *Help* panel.
+
+### head()
+
+To check the first (default is 6) *rows* of `meteo_df` we might use `head()`:
+
+```{r}
+head(meteo_df)
+```
+
+From the output we can get some useful information:
+
+- *names* of the *columns*
+- elements' *type*
+- we can see that the data-set start on "2011-01-01 00:00:00"
+- we see some values
+
+From the columns' name we can guess to which environmental variable they correspond (e.g. WDIR could be Wind Direction). But we can not get from the output:
+
+- when the data-set end
+- in which units are the data reported
+
+### tail()
+
+To see when the data-set ends we can use the `tail()` command:
+
+
+```{r}
+tail(meteo_df)
+```
+
+The command works in a similar to `head()` but showing the last *rows* of the data.
+
+### str()
+
+An useful command to look into the data *structure*:
+
+```{r}
+str(meteo_df)
+```
+
+### glimpse()
+
+Another useful command to inspect the data-set:
+
+```{r}
+glimpse(meteo_df) # this is a nice command that we will use a lot
+```
+
+### summary()
+
+To produce a table with a summary of each data variables we can use `summary()`. The function invokes particular *methods* which depend on the *class* of the first argument.
+
+```{r}
+summary(meteo_df)
+```
+
+## Metadata
+
+A data without metadata is almost useless... Metadata is data that provides information about other data but not the content of the data. Take a look at the wiki: <https://en.wikipedia.org/wiki/Metadata>. 
+
+Looking at the `summary()` output we can note that:
+
+- TIME is a character.. R is not recognizing it as a *time object*.
+- we do not know which **Time Standard** are user for TIME
+- there are some strange numbers... e.g. what is ATMP = 9999?
+
+We need to know more about:
+
+- Time Standard
+- Variables' units
+
+To get these information we need to get back to the NOAA Station webpage and check *data descriptions*: <https://www.ndbc.noaa.gov/measdes.shtml> 
+
+From the link we can see that:
+
+- TIME is in UTC
+- WDIR is Wind direction in degrees clockwise from true N
+- WSPD Wind speed (m/s)
+- PRES Sea level pressure (hPa)
+- ATMP Air temperature (Celsius)
+- Strange 99. 999. 9999. numbers are `NA` or *missing values*
+
+# (comment) Time Standard
+
+The *Coordinated Universal Time* or *UTC* is the primary time standard by which the world regulates clocks and time. The Reference Meridian
+
+!["World Time Zones Map"](img/World_Time_Zones_Map.png?raw=true "Title")
+<https://en.wikipedia.org/wiki/Coordinated_Universal_Time#/media/File:World_Time_Zones_Map.png>
+
+## International Reference Meridian
+
+Calculating time for navigation..
+
+In 1714, the British government offered a longitude prize for a method of determining longitude at sea, with the awards ranging from ~£20,000 (~\$2.6 million to ~\$5.2 million in 2022 terms) depending on accuracy.
+
+From 1730 to 1761 John Harrison worked on the creation of the first chronometer to measure the time differences between anywhere on the Earth and the Greenwich Observatory.
+
+### Readings
+
+- https://en.wikipedia.org/wiki/Coordinated_Universal_Time
+- <http://www.davasobel.com/books-by-dava-sobel/2016/9/2/the-illustrated-longitude>
+
+### Fun Facts
+
+<https://www.luxurytraveladvisor.com/destinations/14-amazing-facts-about-time-zones>
+
+# Create a Temperature dataset
+
+In the following part of the class we will only use `TIME` and `TEMPERATURE`. We don't need to carry around the other variables (for now...). Use the `tidyverse` sintax to subset the `meteo_df` and get a new data frame. Assign the new data frame to the variable `temperature_df`. 
+
+\*Remind: we will use the `%>%` (known as the `pipe`) operator and the function `select()`. You can read the following code as: *from `meteo_df` select variable `TIME` and `ATMP` and assign them to a new object called `tempearature_df`*:
+
+```{r}
+temperature_df <- meteo_df %>%
+  select(TIME, ATMP)
+
+head(temperature_df)
+```
+
+# (comment) `lubridate` to work with Time in R
+
+So.. we should be ready to do some analysis. But first we need to tell `R` to consider `TIME`, still a vector of character strings, as a date/time object. 
+
+Date/time is very annoying for a computer.. how much is $365 + 1$?. It is not trivial.. is 366? 1?.. actually can be both if we are counting days of the year: leap year, occurring every 4 years (The Julian year is 365.25 days).
+
+Does every day has 24 hr?
+
+Dates and times are hard because they have to reconcile two physical phenomena (the rotation of the Earth and its orbit around the sun) with a whole raft of geopolitical phenomena including months, time zones, and Data Saving Time (DST).
+
+The `lubridate` package, which makes it easier to work with dates and times in R. lubridate is not part of core tidyverse because you only need it when you’re working with dates/times. If we already imported the library good otherwise type `library(lubridate)` in the *Console* to load the package's functions in memory.
+
+With lubridate we can add to R two new class:
+
+- `date`, printed as \<date\>
+- `date-time`, more complicated objects, that uniquely defines an instant in time \<dtty\>
+
+As you may have guessed.. we will use \<dtty\> objects!
+
+## Create date and dtty objs from string
+
+We can use the `ymd()` family to convert a string to a date object:
+
+```{r}
+dumb_data <- "2022-04-22"
+typeof(dumb_data)
+dumb_data <- lubridate::ymd(dumb_data)
+print(dumb_data)
+typeof(dumb_data) # What we expect as output?
+class(dumb_data) # It is a new class! Not a new type!
+```
+
+Why is a `double`? We just said that it was a `date`... date/times as numeric `offsets` from the “Unix Epoch”, 1970-01-01... with offsets that can be seconds (for `dtty`) or days (for `date`).
+
+```{r}
+as.numeric(ymd("2022-04-22"))
+ymd("1970-01-01") + 19104
+as_date(19104)
+as_datetime(19104)
+```
+
+What is the number of offset of now!? `as.numeric(now())`
+
+```{r}
+as.numeric(ymd_hms("2022-04-22 15:00:00")) #as.numeric(now())
+print(2 ^ .Machine$double.digits)
+as_datetime(2 ^ .Machine$double.digits) # when the world will finish (according to R) #options(digits = 22) #it is 53 default?
+as_datetime(-1 * (2 ^ .Machine$double.digits)) # the genesis (according to R)
+```
+
+Check <https://en.wikipedia.org/wiki/Future_of_Earth>.. at least for few years we should be good with this system. Later on some more critical problems may arise..
+
+## More examples on ymd():
+
+```{r}
+mdy("January 31st, 2017")
+dym("31, 2017, 1")
+dym("31, 2017, Jan")
+make_date(year = 2017, month = 01, day = 31)
+make_datetime(2017,01,31,12,00,00)
+```
+
+## Date-time components
+
+Some time is necessary to get data/time components:
+
+- `year()`
+- `month()`
+- `yday()`
+- `mday()`
+- `wday()`
+- `hour()`
+- `minute()`
+- `second()`
+
+```{r}
+dumb_datetime <- ymd_hms("2022-04-22 15:34:56")
+yday(dumb_datetime)
+wday(dumb_datetime)
+wday(dumb_datetime, label = TRUE)
+wday(dumb_datetime, label = TRUE, abbr = FALSE)
+```
+
+## Rounding data (Not in class)
+
+We can use the following functions to "round" the data:
+
+- `floor_date()`
+- `round_date()`
+- `ceiling_date()`
+
+```{r}
+dumb_datetime <- ymd_hms("2022-04-22 15:34:56")
+floor_date(dumb_datetime, unit = "year")
+floor_date(dumb_datetime, unit = "week")
+wday(floor_date(dumb_datetime, unit = "week"))
+wday(floor_date(dumb_datetime, unit = "week"), label = TRUE)
+rm(dumb_datetime)
+```
+
+## Setting components (Not in class)
+
+Change part of a date-time object and `update()`:
+
+```{r}
+(datetime <- ymd_hms("2016-07-08 12:34:56"))
+year(datetime) <- 2020
+datetime
+month(datetime) <- 01
+datetime
+hour(datetime) <- hour(datetime) + 1
+datetime
+update(datetime, year = 2020, month = 2, mday = 2, hour = 2)
+```
+
+## Durations and Periods
+
+How old is Fede?
+
+```{r}
+today() - ymd(19890117)
+as.duration(today() - ymd(19890117))
+```
+
+We can use different `durations` (calculated in seconds.. behavior can be confusing when DST):
+
+- `dseconds()`
+- `dminutes()`
+- `dhours()`
+- `ddays()`
+- `dweeks()`
+- `dyears()`
+
+We can use `periods`: time spans but don’t have a fixed length in seconds, instead they work with “human” times, like days and months.
+
+## Some additional reference:
+
+<https://lubridate.tidyverse.org/index.html>
+<https://r4ds.had.co.nz/dates-and-times.html>
+
+
+# Prepare the Temperature dataset for time-series analysis
+
+## `ymd_hms()`
+
+We know that the TIME is in UTC, let's use `lubridate` to change the class of the TIME character string to `dtty`:
+
+```{r}
+temperature_df <- temperature_df %>%
+  mutate(TIME = lubridate::ymd_hms(TIME, tz = "UTC"))
+```
+
+## `na_if()`
+
+We also know that some ATMP values are NAs. Use the function `na_if` to mutate them to NA so they can be handled by R:
+
+```{r}
+temperature_df <- temperature_df %>%
+  mutate(ATMP = na_if(x = ATMP, y = 999)) 
+
+summary(temperature_df)
+```
+
+## Plot to check if data are sound
+
+Now that we have the correct class for TIME and that the summary table for ATMP is sound it is a good idea to start plotting some part of the data-set. 
+
+We can plot the temperature of a single day, for instance the 1st January 2020:
+
+```{r}
+temperature_df %>%
+  filter(TIME >= "2020-01-01",
+         TIME < "2020-01-02") %>%
+  ggplot(data = ., aes(x = TIME, y = ATMP)) +
+  geom_line() + 
+  theme_classic()
+```
+
+We note that:
+
+- there are some missing values (this is ok)
+- why at noon we have the lower TEMPERATURE??
+
+## Create a new time object considering local time
+
+Data are in UTC! So we want to change time-zone to the Pacific Time Zone (PT): 
+
+```{r}
+temperature_df <- temperature_df %>%
+  mutate(TIME_LOCAL = lubridate::with_tz(TIME, tzone = "America/Los_Angeles")) %>%
+  glimpse()
+
+```
+
+### time-zones
+
+The list of time-zone: 
+
+- <https://en.wikipedia.org/wiki/List_of_time_zone_abbreviations>. 
+- <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>
+
+To check the time-zone from your console run `grep("America", OlsonNames(), value=TRUE)` in the R Console.
+
+## Redo the plot 
+
+Check if now the TIME and TEMPERATURE are reflecting local time:
+
+```{r}
+temperature_df %>%
+  select(TIME_LOCAL, ATMP) %>%
+  filter(TIME_LOCAL >= "2020-01-01",
+         TIME_LOCAL < "2020-01-02") %>%
+  ggplot(data = ., aes(x = TIME_LOCAL, y = ATMP)) +
+  geom_line() + 
+  theme_classic()
+```
+
+## Check for duplicated rows
+
+You may not expect to have to check this.. but local time is affected by DST!
+
+```{r}
+temperature_df$TIME[duplicated(as.character(temperature_df$TIME))]
+temperature_df$TIME_LOCAL[duplicated((temperature_df$TIME_LOCAL))] 
+temperature_df$TIME_LOCAL[duplicated(as.character(temperature_df$TIME_LOCAL))] %>% knitr::kable()
+```
+
+Why we are checking `as.character()`? There are duplicated values at the same months... every year... the same hour! 
+
+Indeed.. on local DST there are one missing hour and one duplicated hour every year:
+
+- Daylight saving time 2020 in California began at 2:00 AM on
+- Sunday, March 8
+- and ended at 2:00 AM on
+- Sunday, November 1
+- All times are in Pacific Time.
+
+## Check hours around the DST on March:
+
+```{r}
+temperature_df %>%
+  filter(TIME_LOCAL >= "2020-03-08 01:30:00",
+         TIME_LOCAL < "2020-03-08 04:00:00") %>%
+  #view()
+  knitr::kable()
+```
+You can see that there is not 2AM!
+
+## Check hours around the DST on November:
+```{r}
+temperature_df %>%
+  filter(TIME_LOCAL >= "2020-11-01 00:30:00",
+         TIME_LOCAL < "2020-11-01 04:00:00") %>%
+  #view()
+  knitr::kable()
+```
+
+There are two 1AM in November.. a mess.. 
+
+Depending on the analysis you're carrying you might want different time representation.. 
+We might want to have a Solar Local Time. This make more sense when making some Climatic 
+analysis.
+
+## Create a time-series in Local Solar Time
+
+If we check again the time-zone plot: <https://en.wikipedia.org/wiki/Coordinated_Universal_Time#/media/File:World_Time_Zones_Map.png>
+
+we see that San Francisco belongs to `UTC-8`. Use 
+
+```{r}
+temperature_df <- temperature_df %>% 
+  mutate(TIME_LOCAL_SOLAR = TIME - lubridate::hours(8))
+```
+
+In this case we make an explicit call to the function `hours()` from `lubridate` using `::`. This is a good way to call a function avoiding implicit information.
+
+### Check again 
+
+```{r}
+temperature_df %>%
+  filter(TIME_LOCAL >= "2020-03-08 01:30:00",
+         TIME_LOCAL < "2020-03-08 04:00:00") %>%
+  #view()
+  knitr::kable()
+```
+
+```{r}
+temperature_df %>%
+  filter(TIME_LOCAL >= "2020-11-01 00:00:00",
+         TIME_LOCAL < "2020-11-01 04:00:00") %>%
+  #view()
+  knitr::kable()
+```
+
+## Notes on UTC, DST, Solar Time
+
+If we are doing a multi-year climatic analysis we are missing ~8 hr.. in 10 years is not a huge issue.. but take this into consideration.
+
+```{r}
+summary(temperature_df)
+```
+
+There are no missing or duplicated hours.. as we want.
+```{r}
+temperature_df$TIME_LOCAL_SOLAR[duplicated(as.character(temperature_df$TIME_LOCAL_SOLAR))]
+```
+
+
+# `group()` and `summarise()` Part 1
+
+Let's prepare our final data-set and save it in `temperature_df_solar`. 
+
+```{r}
+temperature_df_solar <- temperature_df %>% 
+  select(TIME_LOCAL_SOLAR, ATMP)
+```
+
+We will use a working data-set `tmp_df` and we will create a YEAR variable that we are going to use for grouping and doing some statistical analysis:
+
+```{r}
+tmp_df <- temperature_df_solar %>%
+  mutate(YEAR = lubridate::year(TIME_LOCAL_SOLAR))
+```
+
+NOTE FOR FEDE: this part have to be explained slowly.. introduce `group()` and `summarise()` start without filter and only TEMP averaging and `n()`. Then `filter()` and add standard deviation etc.
+
+- `group()` is being used to group rows that contains the same value
+- `summarise()` and its functions are used to take a vector of values to returna a single value.
+
+```{r}
+tmp_df %>%
+  # filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  group_by(YEAR) %>%
+  #summarise(TIME = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), # we don't really need this.. 
+  # option 1, we remove it.. option 2 below
+  summarise(
+            AVG_TEMP = mean(ATMP, na.rm=TRUE),
+            #SD_TEMP = sd(ATMP, na.rm=TRUE),
+            #SD_TEMP_PERC = SD_TEMP/AVG_TEMP*100, # this is cool
+            #SD_TEMP_PERC2 = sd(ATMP, na.rm=TRUE)/mean(ATMP, na.rm=TRUE)*100, 
+            nr = n()
+            ) %>%
+  glimpse()
+```
+
+## Plotting `mean(ATMP)` Part1
+
+The best way to look at the data is to make some plots. We will introduce 
+
+- `%>%` into `ggplot()` 
+- `geom_line()` to plot lines 
+- `geom_point()` to plot points
+- observe that ggplot() works with layers
+- `scale_x_continuous()`
+- change plot elements colors
+
+
+```{r}
+tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  group_by(YEAR) %>%
+  summarise(
+    AVG_TEMP = mean(ATMP, na.rm=TRUE),
+    SD_TEMP = sd(ATMP, na.rm=TRUE),
+    SD_TEMP_PERC = SD_TEMP/AVG_TEMP*100,
+    nr = n()
+  ) %>%
+  ggplot(data = ., aes(x = YEAR, y = AVG_TEMP)) +
+  geom_line(color="#006494") + 
+  geom_point(size=3, color="#003554") +
+  # geom_point(size=3, color="red") + # red covering the blue
+  #geom_line() + #this cover the points! better before
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2011,2020)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#B3B0AE"))
+```
+
+## Plotting `mean(ATMP)` Part2 
+
+Adding Standard Deviation to the plot
+
+```{r}
+tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  group_by(YEAR) %>%
+  summarise(
+    AVG_TEMP = mean(ATMP, na.rm=TRUE),
+    SD_TEMP = sd(ATMP, na.rm=TRUE),
+    SD_TEMP_PERC = SD_TEMP/AVG_TEMP*100,
+    nr = n()
+  ) %>%
+  ggplot(data = .) +
+  geom_line(aes(x = YEAR, y = (AVG_TEMP + SD_TEMP )), color = "#006494") + # THIS THE SD
+  geom_line(aes(x = YEAR, y = (AVG_TEMP - SD_TEMP )), color = "#006494") + # THIS THE SD
+  geom_line(aes(x = YEAR, y = AVG_TEMP), color="#006494") +           # THIS FOR THE AVERAGE 
+  geom_point(aes(x = YEAR, y = AVG_TEMP), size=3, color="#003554") +  # THIS FOR THE AVERAGE 
+  #geom_line() + #this cover the points! better before
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2011,2020)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#B3B0AE"))
+```
+
+
+## Plotting `mean(ATMP)` Part3
+
+Adding `geom_segment()` as an example of additional geometry. The list of ggplot geometries: <https://ggplot2.tidyverse.org/reference/>
+
+```{r}
+tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  group_by(YEAR) %>%
+  summarise(
+    AVG_TEMP = mean(ATMP, na.rm=TRUE),
+    SD_TEMP = sd(ATMP, na.rm=TRUE),
+    SD_TEMP_PERC = SD_TEMP/AVG_TEMP*100,
+    T_MAX = max(ATMP, na.rm = TRUE),
+    T_MIN = min(ATMP, na.rm = TRUE),
+    nr = n()
+  ) %>%
+  ggplot(data = .) +
+  geom_point(aes(x = YEAR, y = T_MAX), color = "#051923", bg = "#051923", pch = 24) + #ADD 1 
+  geom_point(aes(x = YEAR, y = T_MIN), color = "#051923", bg = "#051923", pch = 25) + #ADD 1 
+  geom_segment(aes(x = YEAR, xend = YEAR, y = T_MIN, yend = T_MAX), color = "#00A6FB") +
+  geom_line(aes(x = YEAR, y = (AVG_TEMP + SD_TEMP )), color = "#006494") +
+  geom_line(aes(x = YEAR, y = (AVG_TEMP - SD_TEMP )), color = "#006494") +
+  geom_line(aes(x = YEAR, y = AVG_TEMP), color="#006494") +
+  geom_point(aes(x = YEAR, y = AVG_TEMP), size=3, color="#003554") +
+  #geom_line() + #this cover the points! better before
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2011,2020)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+## A boxplot: `geom_boxplot()`
+
+```{r}
+tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  ggplot(.) +
+  geom_boxplot(aes(x = YEAR, y = ATMP, group = YEAR)) +
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2010.5,2020.5)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+## A violin plot: `geom_violin()`
+
+```{r}
+tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  ggplot(.) +
+  geom_violin(aes(x = YEAR, y = ATMP, group = YEAR)) +
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2010.5,2020.5)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+### Take home message
+
+Use geometry functions to produce better (nicer, meaningful) plots.
+
+
+#  `group()` and `summarise()` Part 2
+
+
+
+```{r}
+tmp_df <- temperature_df_solar %>%
+  filter(TIME_LOCAL_SOLAR > lubridate::ymd("2011-01-01")) %>%
+  mutate(YEAR = lubridate::year(TIME_LOCAL_SOLAR),
+         MONTH = lubridate::month(TIME_LOCAL_SOLAR), 
+         MONTH_NAME = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE),
+         ) %>%
+  glimpse()
+```
+
+
+
+# Multiplots (facultative)
+
+```{r}
+library(patchwork) # at the end for extra time
+
+p1 <- tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  group_by(YEAR) %>%
+  summarise(
+    AVG_TEMP = mean(ATMP, na.rm=TRUE),
+    SD_TEMP = sd(ATMP, na.rm=TRUE),
+    SD_TEMP_PERC = SD_TEMP/AVG_TEMP*100,
+    T_MAX = max(ATMP, na.rm = TRUE),
+    T_MIN = min(ATMP, na.rm = TRUE),
+    nr = n()
+  ) %>%
+  ggplot(data = .) +
+  geom_point(aes(x = YEAR, y = T_MAX), color = "#051923", bg = "#051923", pch = 24) + #ADD 1 
+  geom_point(aes(x = YEAR, y = T_MIN), color = "#051923", bg = "#051923", pch = 25) + #ADD 1 
+  geom_segment(aes(x = YEAR, xend = YEAR, y = T_MIN, yend = T_MAX), color = "#00A6FB") +
+  geom_line(aes(x = YEAR, y = (AVG_TEMP + SD_TEMP )), color = "#006494") +
+  geom_line(aes(x = YEAR, y = (AVG_TEMP - SD_TEMP )), color = "#006494") +
+  geom_line(aes(x = YEAR, y = AVG_TEMP), color="#006494") +
+  geom_point(aes(x = YEAR, y = AVG_TEMP), size=3, color="#003554") +
+  #geom_line() + #this cover the points! better before
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2011,2020)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+
+p2 <- tmp_df %>%
+  filter(TIME_LOCAL_SOLAR >= lubridate::ymd("2011-01-01")) %>%
+  ggplot(.) +
+  geom_boxplot(aes(x = YEAR, y = ATMP, group = YEAR)) +
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2010.5,2020.5)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+
+p1 / p2
+#p1 + p2
+#p1 | p2
+```
+
+
+# Some further readings
+
+<https://r-graph-gallery.com>
+<https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html>
+
+
+
+
+
+
+
+
+
+
