@@ -4,14 +4,15 @@ author: "Fede Dallo"
 date: "4/15/2022"
 #output: html_document
 output:
-  #bookdown::html_document2: default
-  html_notebook:
-    highlight: tango
-    mathjax: null
-    number_sections: yes
-    theme: spacelab
-    toc: yes
-    toc_float: yes
+  bookdown::pdf_document2: default
+  bookdown::html_document2: default
+  #html_notebook:
+  #  highlight: tango
+  #  mathjax: null
+  #  number_sections: yes
+  #  theme: spacelab
+  #  toc: yes
+  #  toc_float: yes
 ---
 
 # Objective
@@ -22,12 +23,26 @@ output:
 
 # Requirements:
 
-Produce two ggplot data visualizations. For the first plot use the same meteorological time-series data-set of San Francisco provided during the class to produce one of the following analysis and relative plot: 
+Produce two ggplot data visualizations. 
 
--  
-- Monty
-Daily plot
+For the first plot use the same meteorological time-series data-set of San Francisco provided during the class to produce a Temperature averages (yearly or monthly or daily) using `group()` and `summarise()` functions. You can choose which style of the plot will suit your analysis (boxplot, lines). 
 
+Create an additional plot using a different time-series data-set. You can use a time-series data of your choice. You may want to search for time-series data-set online. For example:
+
+- <https://www.ndbc.noaa.gov/obs.shtml>
+- <https://community.purpleair.com/t/download-sensor-data/100>
+- <http://beacon.berkeley.edu/about/>
+
+Alternatively you can also use one of the R internal data-sets. Find a time-series data-set among those in the list:  `ls("package:datasets")` or `data()`. Load the data-set in memory using `data("<data_set_name>")`. For example, if you want to load the `New York Air Quality Measurements`, use `data("airquality")`. 
+
+We’ll assess your submission on two main criteria:
+
+- Appropriateness: some plot types are better than others, and this often depend on the underlying data. You should choose the visualization type that best fits the data type of your chosen question.
+- Aesthetics: of equal importance to the appropriateness of your visualization is the way it looks. It’s worth prioritizing aesthetics as good looking plots are more likely to grab your readers attention and communicate your message. So play around with different themes and elements to produce nice plots!
+
+# Deliverables:
+
+Two ggplot data visualisations as .png files (using the ‘ggsave’ function) with the accompanying code (either R script or RMarkdown) to reproduce them.
 
 
 

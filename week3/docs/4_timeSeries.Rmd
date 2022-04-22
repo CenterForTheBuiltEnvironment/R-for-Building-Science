@@ -1,5 +1,5 @@
 ---
-title: "Time Series"
+title: "Time Series - Berkeley - Earth Day"
 author: "Fede Dallo"
 date: "4/15/2022"
 #output: html_document
@@ -151,7 +151,20 @@ From the link we can see that:
 - ATMP Air temperature (Celsius)
 - Strange 99. 999. 9999. numbers are `NA` or *missing values*
 
-# (comment) Time Standard
+# Create a Temperature dataset
+
+In the following part of the class we will only use `TIME` and `TEMPERATURE`. We don't need to carry around the other variables (for now...). Use the `tidyverse` sintax to subset the `meteo_df` and get a new data frame. Assign the new data frame to the variable `temperature_df`. 
+
+\*Remind: we will use the `%>%` (known as the `pipe`) operator and the function `select()`. You can read the following code as: *from `meteo_df` select variable `TIME` and `ATMP` and assign them to a new object called `tempearature_df`*:
+
+```{r}
+temperature_df <- meteo_df %>%
+  select(TIME, ATMP)
+
+head(temperature_df)
+```
+
+# Time Standard
 
 The *Coordinated Universal Time* or *UTC* is the primary time standard by which the world regulates clocks and time. The Reference Meridian
 
@@ -166,6 +179,8 @@ In 1714, the British government offered a longitude prize for a method of determ
 
 From 1730 to 1761 John Harrison worked on the creation of the first chronometer to measure the time differences between anywhere on the Earth and the Greenwich Observatory.
 
+He solved the greatest proble of his time.. indeed.
+
 ### Readings
 
 - https://en.wikipedia.org/wiki/Coordinated_Universal_Time
@@ -175,20 +190,8 @@ From 1730 to 1761 John Harrison worked on the creation of the first chronometer 
 
 <https://www.luxurytraveladvisor.com/destinations/14-amazing-facts-about-time-zones>
 
-# Create a Temperature dataset
 
-In the following part of the class we will only use `TIME` and `TEMPERATURE`. We don't need to carry around the other variables (for now...). Use the `tidyverse` sintax to subset the `meteo_df` and get a new data frame. Assign the new data frame to the variable `temperature_df`. 
-
-\*Remind: we will use the `%>%` (known as the `pipe`) operator and the function `select()`. You can read the following code as: *from `meteo_df` select variable `TIME` and `ATMP` and assign them to a new object called `tempearature_df`*:
-
-```{r}
-temperature_df <- meteo_df %>%
-  select(TIME, ATMP)
-
-head(temperature_df)
-```
-
-# (comment) `lubridate` to work with Time in R
+# `lubridate` to work with Time in R
 
 So.. we should be ready to do some analysis. But first we need to tell `R` to consider `TIME`, still a vector of character strings, as a date/time object. 
 
@@ -224,7 +227,7 @@ Why is a `double`? We just said that it was a `date`... date/times as numeric `o
 
 ```{r}
 as.numeric(ymd("2022-04-22"))
-ymd("1970-01-01") + 19104
+ymd("2022-04-22") - 19104
 as_date(19104)
 as_datetime(19104)
 ```
@@ -242,15 +245,18 @@ Check <https://en.wikipedia.org/wiki/Future_of_Earth>.. at least for few years w
 
 ## More examples on ymd():
 
+Imagine that a real assh*** save a `dtty` object in a very uncommon way...
+
 ```{r}
 mdy("January 31st, 2017")
 dym("31, 2017, 1")
 dym("31, 2017, Jan")
+dym("31-2017;:-#ùì1")
 make_date(year = 2017, month = 01, day = 31)
 make_datetime(2017,01,31,12,00,00)
 ```
 
-## Date-time components
+## Date-time components (not in class)
 
 Some time is necessary to get data/time components:
 
@@ -271,7 +277,7 @@ wday(dumb_datetime, label = TRUE)
 wday(dumb_datetime, label = TRUE, abbr = FALSE)
 ```
 
-## Rounding data (Not in class)
+## Rounding data (not in class)
 
 We can use the following functions to "round" the data:
 
@@ -288,7 +294,7 @@ wday(floor_date(dumb_datetime, unit = "week"), label = TRUE)
 rm(dumb_datetime)
 ```
 
-## Setting components (Not in class)
+## Setting components (not in class)
 
 Change part of a date-time object and `update()`:
 
@@ -303,7 +309,7 @@ datetime
 update(datetime, year = 2020, month = 2, mday = 2, hour = 2)
 ```
 
-## Durations and Periods
+## Durations and Periods (not in class)
 
 How old is Fede?
 
@@ -325,11 +331,13 @@ We can use `periods`: time spans but don’t have a fixed length in seconds, ins
 
 ## Some additional reference:
 
-<https://lubridate.tidyverse.org/index.html>
-<https://r4ds.had.co.nz/dates-and-times.html>
+- <https://lubridate.tidyverse.org/index.html>
+- <https://r4ds.had.co.nz/dates-and-times.html>
 
 
-# Prepare the Temperature dataset for time-series analysis
+# Time-series analysis
+
+Now that we have introduced `lubridate` we are ready to work on the data-set! Remember that we have to deal with temperature NAs!
 
 ## `ymd_hms()`
 
@@ -355,7 +363,9 @@ summary(temperature_df)
 
 Now that we have the correct class for TIME and that the summary table for ATMP is sound it is a good idea to start plotting some part of the data-set. 
 
-We can plot the temperature of a single day, for instance the 1st January 2020:
+With such huge dataset some *sanity check* are mandatory before starting a real analysis...
+
+We can plot the temperature of a single day.. plotting the entire dataframe will not tell much... for instance the 1st January 2020:
 
 ```{r}
 temperature_df %>%
@@ -369,11 +379,12 @@ temperature_df %>%
 We note that:
 
 - there are some missing values (this is ok)
+- we can see "steps" in temperature measurements.. this is the precision of the thermometer (quite precise indeed..)
 - why at noon we have the lower TEMPERATURE??
 
-## Create a new time object considering local time
+## `with_tz()` considering local time
 
-Data are in UTC! So we want to change time-zone to the Pacific Time Zone (PT): 
+Data are in UTC! So we want to change time-zone to the Pacific Time Zone (PT). We will use the `with_tz()` function:
 
 ```{r}
 temperature_df <- temperature_df %>%
@@ -381,6 +392,8 @@ temperature_df <- temperature_df %>%
   glimpse()
 
 ```
+
+Here we 
 
 ### time-zones
 
@@ -404,28 +417,31 @@ temperature_df %>%
   geom_line() + 
   theme_classic()
 ```
+Oh! We are very happy now!
 
-## Check for duplicated rows
+
+## `duplicated()` rows check
 
 You may not expect to have to check this.. but local time is affected by DST!
 
-```{r}
+Why we are checking `as.character()`? Guess..
+
+There are duplicated values at the same months... every year... the same hour! Indeed.. on local DST there are one missing hour and one duplicated hour every year.
+
+```{r, echo=TRUE}
 temperature_df$TIME[duplicated(as.character(temperature_df$TIME))]
 temperature_df$TIME_LOCAL[duplicated((temperature_df$TIME_LOCAL))] 
-temperature_df$TIME_LOCAL[duplicated(as.character(temperature_df$TIME_LOCAL))] %>% knitr::kable()
+temperature_df$TIME_LOCAL[duplicated(as.character(temperature_df$TIME_LOCAL))] %>% knitr::kable() #use view()
 ```
 
-Why we are checking `as.character()`? There are duplicated values at the same months... every year... the same hour! 
 
-Indeed.. on local DST there are one missing hour and one duplicated hour every year:
+## Check hours around the DST on March:
 
 - Daylight saving time 2020 in California began at 2:00 AM on
 - Sunday, March 8
 - and ended at 2:00 AM on
 - Sunday, November 1
 - All times are in Pacific Time.
-
-## Check hours around the DST on March:
 
 ```{r}
 temperature_df %>%
@@ -447,11 +463,11 @@ temperature_df %>%
 
 There are two 1AM in November.. a mess.. 
 
-Depending on the analysis you're carrying you might want different time representation.. 
-We might want to have a Solar Local Time. This make more sense when making some Climatic 
-analysis.
+## Local Solar Time
 
-## Create a time-series in Local Solar Time
+Depending on the analysis you're carrying you might want different time representation.. 
+
+We might want to use the Solar Local Time. This make more sense when making some climatic analysis.. not when communicating with the public!
 
 If we check again the time-zone plot: <https://en.wikipedia.org/wiki/Coordinated_Universal_Time#/media/File:World_Time_Zones_Map.png>
 
@@ -496,7 +512,14 @@ temperature_df$TIME_LOCAL_SOLAR[duplicated(as.character(temperature_df$TIME_LOCA
 ```
 
 
-# `group()` and `summarise()` Part 1
+# `group()` and `summarise()` 
+
+These functions are so powerful you can even imagine.. 
+
+- `group()` is being used to group rows that contains the same value
+- `summarise()` and its functions are used to take a vector of values to returna a single value.
+
+## Part 1 `YEAR`
 
 Let's prepare our final data-set and save it in `temperature_df_solar`. 
 
@@ -514,8 +537,6 @@ tmp_df <- temperature_df_solar %>%
 
 NOTE FOR FEDE: this part have to be explained slowly.. introduce `group()` and `summarise()` start without filter and only TEMP averaging and `n()`. Then `filter()` and add standard deviation etc.
 
-- `group()` is being used to group rows that contains the same value
-- `summarise()` and its functions are used to take a vector of values to returna a single value.
 
 ```{r}
 tmp_df %>%
@@ -659,9 +680,11 @@ tmp_df %>%
 Use geometry functions to produce better (nicer, meaningful) plots.
 
 
-#  `group()` and `summarise()` Part 2
+## Part 2 `MONTH`
 
+We have seen how powerful are `group()`. Let's consider MONTH:
 
+NOTA PER FEDE: start only with MONTH and then move to `label=TRUE`
 
 ```{r}
 tmp_df <- temperature_df_solar %>%
@@ -674,6 +697,401 @@ tmp_df <- temperature_df_solar %>%
   glimpse()
 ```
 
+### monthly boxplot() 1
+
+Here we will want to see how the Temperature distribution of a month is changing (or not) over the years.
+
+```{r}
+tmp_df %>%
+  filter(MONTH == 1) %>% # change from 1 to 12
+  ggplot(.) +
+  geom_boxplot(aes(x = YEAR, y = ATMP, group = YEAR) ) +
+  scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2010.5,2020.5)) +
+  scale_y_continuous(limits = c(0,35)) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+### monthly boxplot() 2
+
+Climatic analysis over 10 yrs. Each boxplot contains data of all a month, for example all January months.
+
+```{r}
+tmp_df %>%
+  ggplot(.) +
+  geom_boxplot(aes(x = MONTH, y = ATMP, group = MONTH) ) +
+  #scale_x_continuous(breaks = seq(1,12,1), limits = c(0.5,12.5)) +
+  scale_x_continuous(breaks = seq(1,12,1), limits = c(0.5,12.5), labels = c(levels(tmp_df$MONTH_ABBR))) + #https://ggplot2.tidyverse.org/reference/scale_continuous.html
+  scale_y_continuous(limits = c(0,35)) +
+  xlab(element_blank()) + 
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+
+```{r}
+tmp_df %>% 
+  group_by(MONTH) %>%
+  summarise(YEAR = YEAR,
+            MONTH = MONTH,
+            T_AVG = median(ATMP, na.rm = TRUE),
+            n = n()
+            ) %>%
+  glimpse() %>%
+  ggplot(.) +
+  geom_point(aes(x = MONTH, y = T_AVG, group = MONTH)) +
+  scale_x_continuous(breaks = seq(1,12,1), limits = c(0.5,12.5), labels = c(levels(tmp_df$MONTH_ABBR))) +
+  scale_y_continuous(limits = c(0,35)) +
+  xlab(element_blank()) + 
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+### `geom_line()` plots
+
+```{r}
+tmp_df %>%
+  group_by(YEAR, MONTH) %>%
+  summarise(TIME = lubridate::floor_date(x = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), unit = "day"),
+            TEMPERATURE = mean(ATMP, na.rm = T)
+  ) %>% 
+  ungroup() %>%
+  #filter(YEAR == 2011) %>%
+  glimpse() %>%
+  ggplot(data = ., aes(x = MONTH, y = TEMPERATURE, group = as.factor(YEAR), color=as.factor(YEAR))) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1,12,1), limits = c(0.5,12.5), labels = c(levels(tmp_df$MONTH_ABBR))) +
+  scale_y_continuous(limits = c(0,35)) +
+  xlab(element_blank()) + 
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+
+## Part 3 `SEASON` \& `case_when()`
+
+Let's create a new grouping.. just to play! And we can learn a new function!
+
+```{r}
+tmp_df <- tmp_df %>%
+  mutate(SEASON = case_when( MONTH %in% c(1:2,12) ~ "Winter",
+                                  MONTH %in% c(3:5) ~ "Spring",
+                                  MONTH %in% c(6:8) ~ "Summer",
+                                  MONTH %in% c(9:11) ~ "Fall"
+                                  ))
+```
+
+... also.. do you remember the `%in%` operator!?
+
+```{r}
+tmp_df %>%
+  filter(YEAR == 2018) %>%
+  ggplot() +
+  geom_boxplot(aes(x = SEASON, y = ATMP, group = SEASON))
+```
+
+There is something wrong here.... we need factors!
+
+### `factor()`
+
+Remember that factors are data structures in R that store categorical data. In datasets, there are often fields that take only a few predefined values. For example: gender, availability, country, marital status, etc.
+
+```{r}
+tmp_df <- tmp_df %>%
+  mutate(SEASON = factor(SEASON, levels = c("Winter", 
+                                            "Spring",
+                                            "Summer",
+                                            "Fall")
+                         )
+         )
+```
+
+And plot again:
+
+```{r}
+tmp_df %>%
+  filter(YEAR == 2018) %>%
+  ggplot() +
+  geom_boxplot(aes(x = SEASON, y = ATMP, group = SEASON))
+```
+
+Wait a minute... Fall temperature is higher than Summer?
+
+
+```{r}
+tmp_df %>%
+  filter(YEAR == 2018) %>%
+  group_by(MONTH) %>%
+  summarise(T_AVG = mean(ATMP, na.rm = TRUE)
+            ) %>%
+  #view()
+  knitr::kable()
+```
+
+The Indian Summer is real! <https://en.wikipedia.org/wiki/Indian_summer>
+
+
+## Part 4 `DAY`
+
+We are reaching the top! Create a DAY variable:
+
+```{r}
+tmp_df <- temperature_df_solar %>%
+  filter(TIME_LOCAL_SOLAR > lubridate::ymd("2011-01-01")) %>%
+  mutate(YEAR = lubridate::year(TIME_LOCAL_SOLAR),
+         MONTH = lubridate::month(TIME_LOCAL_SOLAR), 
+         MONTH_NAME = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         DAY = lubridate::day(TIME_LOCAL_SOLAR),
+         DAY_NAME = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         DAY_ABBR = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         WEEKDAY = lubridate::wday(TIME_LOCAL_SOLAR),
+         SEASON = case_when( MONTH %in% c(1:2,12) ~ "Winter",
+                             MONTH %in% c(3:5) ~ "Spring",
+                             MONTH %in% c(6:8) ~ "Summer",
+                             MONTH %in% c(9:11) ~ "Fall"
+                             )
+         ) %>%
+  mutate(SEASON = factor(SEASON, levels = c("Winter", 
+                                            "Spring",
+                                            "Summer",
+                                            "Fall")
+                         )
+         ) %>%
+  glimpse()
+```
+
+Let's compare January's days over the 10 years! (.. if it makes sense..)
+
+```{r}
+tmp_df %>%
+  filter(MONTH == 1) %>%
+  group_by(YEAR,DAY) %>%
+  summarise(TIME = lubridate::floor_date(x = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), unit = "day"),
+            TEMPERATURE = mean(ATMP, na.rm = T)
+  ) %>% 
+  ungroup() %>%
+  #filter(YEAR == 2011) %>%
+  ggplot(data = ., aes(x = DAY, y = TEMPERATURE, group = as.factor(YEAR), color=as.factor(YEAR))) +
+  geom_line() +
+  scale_x_continuous(breaks = seq(1,31,1), limits = c(0.5,31.5)) +
+  scale_y_continuous(limits = c(0,35)) +
+  xlab(element_blank()) + 
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+```
+
+
+## Part 5 `HOUR`
+
+We are finally got the queen! Make an hourly average :D .. will take some time
+
+```{r}
+tmp_df <- temperature_df_solar %>%
+  filter(TIME_LOCAL_SOLAR > lubridate::ymd("2011-01-01")) %>%
+  mutate(YEAR = lubridate::year(TIME_LOCAL_SOLAR),
+         MONTH = lubridate::month(TIME_LOCAL_SOLAR), 
+         MONTH_NAME = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         DAY = lubridate::day(TIME_LOCAL_SOLAR),
+         DAY_NAME = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         DAY_ABBR = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         WEEKDAY = lubridate::wday(TIME_LOCAL_SOLAR),
+         HOUR = lubridate::hour(TIME_LOCAL_SOLAR) # here!
+  ) %>%
+  glimpse()
+```
+
+```{r}
+tmp_df_1H <- temperature_df_solar %>%
+  filter(TIME_LOCAL_SOLAR > lubridate::ymd("2011-01-01")) %>%
+  mutate(YEAR = lubridate::year(TIME_LOCAL_SOLAR),
+         MONTH = lubridate::month(TIME_LOCAL_SOLAR), 
+         MONTH_NAME = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         DAY = lubridate::day(TIME_LOCAL_SOLAR),
+         DAY_NAME = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         DAY_ABBR = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         WEEKDAY = lubridate::wday(TIME_LOCAL_SOLAR),
+         HOUR = lubridate::hour(TIME_LOCAL_SOLAR)
+  ) %>%
+  group_by(YEAR, MONTH, DAY, HOUR) %>%
+  summarise(TIME_HR = lubridate::ceiling_date(x = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), unit = "hour"),
+            ATMP_AVG = mean(ATMP, na.rm = TRUE),
+            NR_OBS = n()
+            ) %>%
+  ungroup() %>%
+  print(n=10)
+```
+
+
+Maybe you can't appreciate now how beauty and "simple" this is... 
+
+```{r}
+tmp_df_1H %>%
+  filter(TIME_HR >= "2018-01-01",
+         TIME_HR <= "2018-01-31") %>%
+  ggplot(data = ., mapping = aes(x = TIME_HR, y = ATMP_AVG)) +
+  geom_line() +
+  geom_point()
+```
+
+
+
+# Linear model plot `MONTH`
+
+```{r}
+library(patchwork)
+tmp_df %>%
+  group_by(YEAR, MONTH_ABBR) %>%
+  summarise(TEMPERATURE = median(ATMP, na.rm = TRUE)) %>%
+  filter(MONTH_ABBR == "Jan") %>%
+  ungroup() %>%
+  glimpse() %>%
+  ggplot(data = ., aes(x = YEAR, y = TEMPERATURE)) +
+  geom_smooth(method = "lm") +
+  geom_point() +
+  ggpmisc::stat_poly_eq(formula = y ~ x,
+                        parse = TRUE, label.x = "left", label.y = "top",
+                        aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~"))) +
+  plot_annotation(title = paste0("Temperature trend ", "January" ),
+                  #subtitle = "Number of thermostat events in California homes during a wildfire episode; days with more events have darker shading",
+                  theme = theme(plot.title = element_text(size = 14, colour = "grey20", face = "bold", hjust = 0),
+                                plot.subtitle = element_text(size = 10, colour = "grey20", face = "italic", hjust = 0, margin = margin(b = 10)),
+                                plot.background = element_rect(fill = "white"))) +
+  ylab("Temperature (°C)") +
+  xlab(element_blank())
+```
+
+# Windrose plot
+
+Some plot for the wind direction. First let's create the data-set.
+
+```{r}
+wind_df <- meteo_df %>%
+  select(TIME, WDIR, WSPD) %>%
+  glimpse() %>%
+  mutate(TIME = lubridate::ymd_hms(TIME, tz = "UTC") ) %>%
+  glimpse()
+```
+
+## Arrows
+
+```{r}
+wind_df %>%
+  filter(TIME >= "2020-01-01",
+         TIME < "2020-01-02") %>%
+  mutate(YEAR = lubridate::year(TIME),
+         MONTH = lubridate::month(TIME), 
+         MONTH_NAME = lubridate::month(TIME, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME, label = TRUE, abbr = TRUE),
+         DAY = lubridate::day(TIME),
+         DAY_NAME = lubridate::wday(TIME, label = TRUE, abbr = FALSE),
+         DAY_ABBR = lubridate::wday(TIME, label = TRUE, abbr = TRUE),
+         WEEKDAY = lubridate::wday(TIME),
+         HOUR = lubridate::hour(TIME)
+         ) %>%
+  glimpse() %>%
+  group_by(HOUR) %>%
+  summarise(TIME = round_date(mean(TIME, na.rm=TRUE), unit = "hour"),
+            WSPD = mean(WSPD, na.rm = TRUE),
+            WDIR = (360+(atan2(sum(sin(WDIR*pi/180)),sum(cos(WDIR*pi/180)))*180/pi))%%360
+  ) %>%
+  ungroup() %>%
+  mutate(WIND_SECTOR = case_when( WDIR > 0 & WDIR <= 22.5 ~ "North",
+                                  WDIR > 22.5 & WDIR <= 67.5 ~ "North-East",
+                                  WDIR > 67.5 & WDIR <= 112.5 ~ "East",
+                                  WDIR > 112.5 & WDIR <= 157.5 ~ "South-East",
+                                  WDIR > 157.5 & WDIR <= 202.5 ~ "South",
+                                  WDIR > 202.5 & WDIR <= 247.5 ~ "South-West",
+                                  WDIR > 247.5 & WDIR <= 292.5 ~ "West",
+                                  WDIR > 292.5 & WDIR <= 337.5 ~ "North-West",
+                                  WDIR > 337.5 & WDIR <= 360 ~ "North")
+         ) %>%
+  glimpse() %>%
+  ggplot(., mapping = aes(x = TIME, y = WSPD)) +
+  geom_segment(aes(x = HOUR,
+  #geom_segment(aes(x = lubridate::hour(TIME),
+  #geom_segment(aes(x = TIME,
+                   y = 0,
+                   # xend = HOUR - lubridate::dhours(1 * -cos((90-WDIR) / 360 * 2 * pi)),         # NORMALIZE TO 1 
+                   # yend = -1 * (1 * -sin((90-WDIR) / 360 * 2 * pi))#, col = factor(mean_WS_ms)  # NORMALIZE TO 1 
+                   xend = HOUR - lubridate::dhours(WSPD * -cos((90-WDIR) / 360 * 2 * pi)),        # ADDING LENGTH AS SPEED 
+                   yend = - 1 * (WSPD * -sin((90-WDIR) / 360 * 2 * pi))                             # ADDING LENGTH AS SPEED
+  ),
+  arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+  colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+  geom_point(aes(HOUR, 0), size = 1, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+  coord_fixed(3600) +
+  theme(legend.position = "none") +
+  ylab("WD") +
+  theme_minimal(base_size = 20) + 
+  theme(axis.text.x = element_text(angle = 20), axis.title.x = element_blank(), 
+        axis.text.y = element_text(colour = "white"), 
+        panel.grid.major.y = element_blank(), 
+        panel.grid.minor.y = element_blank(),
+        plot.background = element_rect(fill = "transparent", colour = NA))
+```
+
+## Using an external libraries
+
+```{r}
+library(clifro)
+library(openair)
+```
+
+Prepare the dataframe:
+
+```{r}
+wind_df_WR <- wind_df %>%
+  filter(TIME >= "2020-01-01",
+         TIME < "2020-01-02") %>%
+  mutate(YEAR = lubridate::year(TIME),
+         MONTH = lubridate::month(TIME), 
+         MONTH_NAME = lubridate::month(TIME, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME, label = TRUE, abbr = TRUE),
+         DAY = lubridate::day(TIME),
+         DAY_NAME = lubridate::wday(TIME, label = TRUE, abbr = FALSE),
+         DAY_ABBR = lubridate::wday(TIME, label = TRUE, abbr = TRUE),
+         WEEKDAY = lubridate::wday(TIME),
+         HOUR = lubridate::hour(TIME)
+  ) %>%
+  glimpse() %>%
+  group_by(HOUR) %>%
+  summarise(TIME = round_date(mean(TIME, na.rm=TRUE), unit = "hour"),
+            WSPD = mean(WSPD, na.rm = TRUE),
+            WDIR = (360+(atan2(sum(sin(WDIR*pi/180)),sum(cos(WDIR*pi/180)))*180/pi))%%360
+  ) %>%
+  ungroup() %>%
+  mutate(WIND_SECTOR = case_when( WDIR > 0 & WDIR <= 22.5 ~ "North",
+                                  WDIR > 22.5 & WDIR <= 67.5 ~ "North-East",
+                                  WDIR > 67.5 & WDIR <= 112.5 ~ "East",
+                                  WDIR > 112.5 & WDIR <= 157.5 ~ "South-East",
+                                  WDIR > 157.5 & WDIR <= 202.5 ~ "South",
+                                  WDIR > 202.5 & WDIR <= 247.5 ~ "South-West",
+                                  WDIR > 247.5 & WDIR <= 292.5 ~ "West",
+                                  WDIR > 292.5 & WDIR <= 337.5 ~ "North-West",
+                                  WDIR > 337.5 & WDIR <= 360 ~ "North")
+  ) %>%
+  glimpse()
+```
+
+Plot:
+
+```{r}
+with(wind_df_WR, windrose(speed = WSPD, 
+                          direction = WDIR, 
+                          speed_cuts = c(2,4,6,8), 
+                          ggtheme = "bw"
+                          )
+     )
+```
 
 
 # Multiplots (facultative)
@@ -725,8 +1143,9 @@ p1 / p2
 
 # Some further readings
 
-<https://r-graph-gallery.com>
-<https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html>
+- <https://r-graph-gallery.com>
+- <https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html>
+- <https://github.com/CenterForTheBuiltEnvironment/R-for-Building-Science>
 
 
 

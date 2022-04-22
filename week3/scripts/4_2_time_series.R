@@ -434,12 +434,12 @@ tmp_df <- tmp_df %>%
          )
 
 tmp_df %>%
-  filter(YEAR == 2011) %>%
+  filter(YEAR == 2015) %>%
   ggplot() +
   geom_boxplot(aes(x = SEASON, y = ATMP, group = SEASON))
 
 tmp_df %>%
-  filter(YEAR == 2018) %>%
+  filter(YEAR == 2015) %>%
   group_by(MONTH) %>%
   summarise(T_AVG = mean(ATMP, na.rm = TRUE)
             ) %>%
@@ -511,6 +511,7 @@ tmp_df %>%
   ylab("Atmospheric Temperature (°C)") +
   theme_classic() +
   theme(panel.grid.major = element_line(colour = "#CCCCCC"))
+
 # note: 
 # do not have much sense to average x day of each month of the year... this is why is flat.. 
 # let's compare january over the 10 years!
@@ -551,6 +552,30 @@ tmp_df <- temperature_df_solar %>%
          HOUR = lubridate::hour(TIME_LOCAL_SOLAR)
   ) %>%
   glimpse()
+
+# hourly average:
+tmp_df_1H <- temperature_df_solar %>%
+  filter(TIME_LOCAL_SOLAR > lubridate::ymd("2011-01-01")) %>%
+  mutate(YEAR = lubridate::year(TIME_LOCAL_SOLAR),
+         MONTH = lubridate::month(TIME_LOCAL_SOLAR), 
+         MONTH_NAME = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         MONTH_ABBR = lubridate::month(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         DAY = lubridate::day(TIME_LOCAL_SOLAR),
+         DAY_NAME = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = FALSE),
+         DAY_ABBR = lubridate::wday(TIME_LOCAL_SOLAR, label = TRUE, abbr = TRUE),
+         WEEKDAY = lubridate::wday(TIME_LOCAL_SOLAR),
+         HOUR = lubridate::hour(TIME_LOCAL_SOLAR)
+  ) %>%
+  group_by(YEAR, MONTH, DAY, HOUR) %>%
+  summarise(TIME_HR = lubridate::ceiling_date(x = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), unit = "hour"),
+            ATMP_AVG = mean(ATMP, na.rm = TRUE),
+            NR_OBS = n()
+            ) %>%
+  ungroup() %>%
+  print(n=10)
+  
+
+
 
 # LINEAR MODEL... TREND
 
