@@ -183,8 +183,10 @@ He solved the greatest proble of his time.. indeed.
 
 ### Readings
 
-- https://en.wikipedia.org/wiki/Coordinated_Universal_Time
+- <https://en.wikipedia.org/wiki/Coordinated_Universal_Time>
 - <http://www.davasobel.com/books-by-dava-sobel/2016/9/2/the-illustrated-longitude>
+- <https://en.wikipedia.org/wiki/The_Great_Game_(Hopkirk_book)>
+- <https://en.wikipedia.org/wiki/Kim_(novel)>
 
 ### Fun Facts
 
@@ -588,6 +590,8 @@ tmp_df %>%
   theme(panel.grid.major = element_line(colour = "#B3B0AE"))
 ```
 
+Comment: ggplot position scales for date/time data is very nice to format the default appearance of the x-axes label: <https://ggplot2.tidyverse.org/reference/scale_date.html>.
+
 ## Plotting `mean(ATMP)` Part2 
 
 Adding Standard Deviation to the plot
@@ -718,6 +722,8 @@ tmp_df %>%
 
 Climatic analysis over 10 yrs. Each boxplot contains data of all a month, for example all January months.
 
+Note: using `levels()` for the `labels()` is a good option!
+
 ```{r}
 tmp_df %>%
   ggplot(.) +
@@ -756,11 +762,11 @@ tmp_df %>%
 ```{r}
 tmp_df %>%
   group_by(YEAR, MONTH) %>%
-  summarise(TIME = lubridate::floor_date(x = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), unit = "day"),
+  summarise(#TIME = lubridate::floor_date(x = mean(TIME_LOCAL_SOLAR, na.rm=TRUE), unit = "day"), #Not in class
             TEMPERATURE = mean(ATMP, na.rm = T)
   ) %>% 
-  ungroup() %>%
-  #filter(YEAR == 2011) %>%
+  #ungroup() %>% # Not in class
+  #filter(YEAR == 2011) %>% # EXAMPLE IN CLASS
   glimpse() %>%
   ggplot(data = ., aes(x = MONTH, y = TEMPERATURE, group = as.factor(YEAR), color=as.factor(YEAR))) +
   geom_line() +
@@ -1145,6 +1151,7 @@ p1 / p2
 
 - <https://r-graph-gallery.com>
 - <https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html>
+- <https://ggplot2.tidyverse.org/reference/scale_date.html>
 - <https://github.com/CenterForTheBuiltEnvironment/R-for-Building-Science>
 
 

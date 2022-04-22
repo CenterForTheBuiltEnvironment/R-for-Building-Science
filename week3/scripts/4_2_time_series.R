@@ -175,6 +175,22 @@ tail(temperature_df_solar)
 # note: data set is not perfect.. we have about 8hr missing 
 # to have a complete 2011-2020 (10 years summary).. 
 
+temperature_df_solar %>%
+  filter(TIME_LOCAL_SOLAR >= "2019-01-01") %>%
+  mutate(TIME_POSIXct = as.POSIXct(strptime(as.character(TIME_LOCAL_SOLAR), "%Y-%m-%d %H:%M:%S")) ) %>%
+  glimpse() %>%
+  ggplot(data = ., aes(x = TIME_POSIXct, y = ATMP)) +
+  geom_line(color="#006494") + 
+  geom_point(size=3, color="#003554") +
+  # geom_point(size=3, color="red") + # red covering the blue
+  #geom_line() + #this cover the points! better before
+  #scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2011,2020)) +
+  scale_x_datetime(limits = c(as.POSIXct("2019-01-01"), as.POSIXct("2020-12-31")), expand = c(0, 0), date_breaks = "2 months", labels = scales::label_date(format = "%b")) +
+  xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
+  ylab("Atmospheric Temperature (°C)") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(colour = "#B3B0AE"))
+
 # --------------------------------------------------
 # Mutate to create "Y" == "year" variable
 
@@ -221,12 +237,14 @@ tmp_df %>%
     SD_TEMP_PERC = SD_TEMP/AVG_TEMP*100,
     nr = n()
   ) %>%
+  glimpse() %>%
   ggplot(data = ., aes(x = YEAR, y = AVG_TEMP)) +
   geom_line(color="#006494") + 
   geom_point(size=3, color="#003554") +
   # geom_point(size=3, color="red") + # red covering the blue
   #geom_line() + #this cover the points! better before
   scale_x_continuous(breaks = seq(2011,2020,1), limits = c(2011,2020)) +
+  #scale_x_datetime(limits = c(as.Date("2011-01-01"), as.Date("2020-12-31")), expand = c(0, 0), date_breaks = "6 months", labels = scales::label_date(format = "%b")) +
   xlab(element_blank()) + #https://ggplot2.tidyverse.org/reference/theme.html
   ylab("Atmospheric Temperature (°C)") +
   theme_classic() +
