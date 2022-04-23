@@ -626,8 +626,10 @@ tmp_df %>%
 
 # Wind Direction
 
-wind_df <- tmp_df_SF %>%
-  select(TIME, WDIR, WSPD)
+#wind_df <- tmp_df_SF %>%
+wind_df <- meteo_df %>%
+  select(TIME, WDIR, WSPD) %>%
+  mutate(TIME = lubridate::ymd_hms(TIME, tz = "UTC"))
 
 wind_df %>%
   filter(TIME >= "2020-01-01",
@@ -727,108 +729,108 @@ with(wind_df_WR, windrose(speed = WSPD,
                           )
      )
 
-windRose(mydata = wind_df_WR, 
-         ws = "WSPD",
-         wd = "WDIR"
-         )
-  
-
-# Wind Speed
-
-wind_df %>%
-  filter(TIME >= "2020-01-01",
-         TIME < "2020-01-02") %>%
-  mutate(YEAR = lubridate::year(TIME),
-         MONTH = lubridate::month(TIME), 
-         MONTH_NAME = lubridate::month(TIME, label = TRUE, abbr = FALSE),
-         MONTH_ABBR = lubridate::month(TIME, label = TRUE, abbr = TRUE),
-         DAY = lubridate::day(TIME),
-         DAY_NAME = lubridate::wday(TIME, label = TRUE, abbr = FALSE),
-         DAY_ABBR = lubridate::wday(TIME, label = TRUE, abbr = TRUE),
-         WEEKDAY = lubridate::wday(TIME),
-         HOUR = lubridate::hour(TIME)
-  ) %>%
-  glimpse() %>%
-  group_by(HOUR) %>%
-  summarise(#TIME = round_date(mean(TIME, na.rm=TRUE), unit = "hour"),
-    WSPD = mean(WSPD, na.rm = TRUE),
-    WDIR = (360+(atan2(sum(sin(WDIR*pi/180)),sum(cos(WDIR*pi/180)))*180/pi))%%360
-  ) %>%
-  ungroup() %>%
-  mutate(WIND_SECTOR = case_when( WDIR > 0 & WDIR <= 22.5 ~ "North",
-                                  WDIR > 22.5 & WDIR <= 67.5 ~ "North-East",
-                                  WDIR > 67.5 & WDIR <= 112.5 ~ "East",
-                                  WDIR > 112.5 & WDIR <= 157.5 ~ "South-East",
-                                  WDIR > 157.5 & WDIR <= 202.5 ~ "South",
-                                  WDIR > 202.5 & WDIR <= 247.5 ~ "South-West",
-                                  WDIR > 247.5 & WDIR <= 292.5 ~ "West",
-                                  WDIR > 292.5 & WDIR <= 337.5 ~ "North-West",
-                                  WDIR > 337.5 & WDIR <= 360 ~ "North")
-  ) %>%
-  glimpse() %>%
-  ggplot(df, mapping = aes(x = HOUR, y = WSPD)) +
-  theme_classic(base_size = 20) + 
-#  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  theme(axis.title.x = element_blank()) +
-  geom_line(aes(x = HOUR, y = WSPD),
-            lwd = 1, alpha = 0.2, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
-  geom_smooth(aes(x = HOUR, y = WSPD),
-              lwd = 2, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
-  geom_point(aes(x = HOUR, y = WSPD, 
-                 size = 2, 
-                 #size = log(WSPD), 
-  ), shape = 19, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
-  #scale_color_viridis_d() +
-  #scale_color_brewer() +
-  #scale_colour_brewer(type = "seq", palette = "Spectral") +
-  #scale_color_brewer(palette = "Spectral") +
-  #scale_color_brewer(palette = "Purples") +
-  #scale_fill_distiller() +
-  #scale_color_scico_d() +
-  theme(legend.position="none") + 
-  scale_x_continuous(breaks = seq(0,23,1), labels = c(as.character(unique(lubridate::hour(wind_df$TIME)))) ) +
-  ylab("m/s")
-
-
-# create the plot ----
-
-
-
-ggplot(wind_df, mapping = aes(x = TIME, y = WSPD)) +
-  theme_minimal(base_size = 20) + 
-  theme(axis.text.x = element_text(angle = 20), axis.title.x = element_blank(), 
-        axis.text.y = element_text(colour = "white"), 
-        panel.grid.major.y = element_blank(), 
-        panel.grid.minor.y = element_blank(),
-        plot.background = element_rect(fill = "transparent", colour = NA)) +
-  geom_segment(aes(x = TIME,
-                   y = 0,
-                   xend = TIME - lubridate::dhours(1 * -cos((90-WDIR) / 360 * 2 * pi)),
-                   yend = -1 * (1 * -sin((90-WDIR) / 360 * 2 * pi))
-  ),
-  arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
-  colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
-  geom_point(aes(TIME, 0), size = 1, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
-  coord_fixed(3600) +
-  ylim(-1,1) +
-  xlim(df$TIME[1]-3600, df$TIME[nrow(df)]+3600) +
-  theme(legend.position = "none") +
-  ylab("WD")
-
-
-
-
-
-
-
-
-
-# x- CALCULATING Relative Humidity
-## Formula.. 
-## Using function library: https://cran.r-project.org/web/packages/humidity/humidity.pdf
-
-meteo_df %>% 
-  select()
+# windRose(mydata = wind_df_WR, 
+#          ws = "WSPD",
+#          wd = "WDIR"
+#          )
+#   
+# 
+# # Wind Speed
+# 
+# wind_df %>%
+#   filter(TIME >= "2020-01-01",
+#          TIME < "2020-01-02") %>%
+#   mutate(YEAR = lubridate::year(TIME),
+#          MONTH = lubridate::month(TIME), 
+#          MONTH_NAME = lubridate::month(TIME, label = TRUE, abbr = FALSE),
+#          MONTH_ABBR = lubridate::month(TIME, label = TRUE, abbr = TRUE),
+#          DAY = lubridate::day(TIME),
+#          DAY_NAME = lubridate::wday(TIME, label = TRUE, abbr = FALSE),
+#          DAY_ABBR = lubridate::wday(TIME, label = TRUE, abbr = TRUE),
+#          WEEKDAY = lubridate::wday(TIME),
+#          HOUR = lubridate::hour(TIME)
+#   ) %>%
+#   glimpse() %>%
+#   group_by(HOUR) %>%
+#   summarise(#TIME = round_date(mean(TIME, na.rm=TRUE), unit = "hour"),
+#     WSPD = mean(WSPD, na.rm = TRUE),
+#     WDIR = (360+(atan2(sum(sin(WDIR*pi/180)),sum(cos(WDIR*pi/180)))*180/pi))%%360
+#   ) %>%
+#   ungroup() %>%
+#   mutate(WIND_SECTOR = case_when( WDIR > 0 & WDIR <= 22.5 ~ "North",
+#                                   WDIR > 22.5 & WDIR <= 67.5 ~ "North-East",
+#                                   WDIR > 67.5 & WDIR <= 112.5 ~ "East",
+#                                   WDIR > 112.5 & WDIR <= 157.5 ~ "South-East",
+#                                   WDIR > 157.5 & WDIR <= 202.5 ~ "South",
+#                                   WDIR > 202.5 & WDIR <= 247.5 ~ "South-West",
+#                                   WDIR > 247.5 & WDIR <= 292.5 ~ "West",
+#                                   WDIR > 292.5 & WDIR <= 337.5 ~ "North-West",
+#                                   WDIR > 337.5 & WDIR <= 360 ~ "North")
+#   ) %>%
+#   glimpse() %>%
+#   ggplot(df, mapping = aes(x = HOUR, y = WSPD)) +
+#   theme_classic(base_size = 20) + 
+# #  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
+#   theme(axis.title.x = element_blank()) +
+#   geom_line(aes(x = HOUR, y = WSPD),
+#             lwd = 1, alpha = 0.2, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+#   geom_smooth(aes(x = HOUR, y = WSPD),
+#               lwd = 2, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+#   geom_point(aes(x = HOUR, y = WSPD, 
+#                  size = 2, 
+#                  #size = log(WSPD), 
+#   ), shape = 19, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+#   #scale_color_viridis_d() +
+#   #scale_color_brewer() +
+#   #scale_colour_brewer(type = "seq", palette = "Spectral") +
+#   #scale_color_brewer(palette = "Spectral") +
+#   #scale_color_brewer(palette = "Purples") +
+#   #scale_fill_distiller() +
+#   #scale_color_scico_d() +
+#   theme(legend.position="none") + 
+#   scale_x_continuous(breaks = seq(0,23,1), labels = c(as.character(unique(lubridate::hour(wind_df$TIME)))) ) +
+#   ylab("m/s")
+# 
+# 
+# # create the plot ----
+# 
+# 
+# 
+# ggplot(wind_df, mapping = aes(x = TIME, y = WSPD)) +
+#   theme_minimal(base_size = 20) + 
+#   theme(axis.text.x = element_text(angle = 20), axis.title.x = element_blank(), 
+#         axis.text.y = element_text(colour = "white"), 
+#         panel.grid.major.y = element_blank(), 
+#         panel.grid.minor.y = element_blank(),
+#         plot.background = element_rect(fill = "transparent", colour = NA)) +
+#   geom_segment(aes(x = TIME,
+#                    y = 0,
+#                    xend = TIME - lubridate::dhours(1 * -cos((90-WDIR) / 360 * 2 * pi)),
+#                    yend = -1 * (1 * -sin((90-WDIR) / 360 * 2 * pi))
+#   ),
+#   arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+#   colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+#   geom_point(aes(TIME, 0), size = 1, colour = RColorBrewer::brewer.pal(name = "BuPu", n = 9)[7]) +
+#   coord_fixed(3600) +
+#   ylim(-1,1) +
+#   xlim(df$TIME[1]-3600, df$TIME[nrow(df)]+3600) +
+#   theme(legend.position = "none") +
+#   ylab("WD")
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # x- CALCULATING Relative Humidity
+# ## Formula.. 
+# ## Using function library: https://cran.r-project.org/web/packages/humidity/humidity.pdf
+# 
+# meteo_df %>% 
+#   select()
   
 
 

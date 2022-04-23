@@ -2,9 +2,10 @@
 title: "Time Series - Berkeley - Earth Day"
 author: "Fede Dallo"
 date: "4/15/2022"
-#output: html_document
 output:
-  #bookdown::html_document2: default
+  html_document:
+    toc: yes
+    df_print: paged
   html_notebook:
     highlight: tango
     mathjax: null
@@ -12,8 +13,6 @@ output:
     theme: spacelab
     toc: yes
     toc_float: yes
-    
-
 ---
 
 ```{r setup, include=FALSE}
