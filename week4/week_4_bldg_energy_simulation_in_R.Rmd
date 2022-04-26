@@ -22,6 +22,9 @@ knitr::opts_chunk$set(eval = TRUE, echo = TRUE, message = FALSE, warning = FALSE
 # load required libraries
 library("tidyverse")
 library("eplusr")
+library("lubridate")
+library("ggpubr")
+
 
 
 ```
@@ -60,6 +63,8 @@ Load the required library into the current R session environment.
 # load the packages
 library(tidyverse)
 library(eplusr)
+library(lubridate)
+library(ggpubr)
 
 ```
 
@@ -333,9 +338,6 @@ model$SimulationControl$`Run Simulation for Weather File Run Periods` <- "Yes"
 # convert energy consumption into more recognizable energy units
 model$OutputControl_Table_Style$Unit_Conversion <- "JtoKWH"
 
-# save the modified model into a temporary folder
-model$save(file.path(simulation_folder, 'basecase', basename(model_file)), overwrite = TRUE)
-
 ```
 
 
@@ -345,11 +347,29 @@ Add additional output parameters that we can use learn about the behavior of thi
 
 # add outdoor environmental conditions
 
+# first figure out what are the field we need to define
+model$definition("Output:Variable")
+oat_output <- list("Output:Variable" = list("*", "Site Outdoor Air Drybulb Temperature", "hourly"))
+
+model$add(oat_output)
 
 # add heating and cooling usage
+hvac_outputs <- list(Output_Variable = list("*", "Air System Total Cooling Energy", "hourly"),
+                     Output_Variable = list("*", "Air System Total Heating Energy", "hourly")
+                     )
 
 
-# add occupancy schedule
+model$add(hvac_outputs)
+
+```
+
+
+Save the input data file (idf) to your directory of choice.
+
+``` {r}
+
+# save the modified model into a folder
+model$save(file.path(simulation_folder, 'basecase', basename(model_file)), overwrite = TRUE)
 
 ```
 
@@ -379,7 +399,129 @@ unique(job$report_data()$name)
 
 ```
 
-We will just focus on a couple of these 
+We will just focus on a couple of these data to produce visualizations.
 
+# Analysis and Visualizations
+
+## Breakdown of end-use energy
+
+We will start by doing a donut visualization of where energy is consumed in the building. We first need to retrieve two tables, the building area and the end use tables.
+
+```{r}
+
+# retrieve and save data tables for analysis
+bldg_area <- job$tabular_data(table_name = "Building Area", wide = TRUE)[[1]]
+
+end_use_nrg <- job$tabular_data(table_name = "End Uses", wide = TRUE)[[1]]
+
+```
+
+Then we calculate the total energy use intensity (EUI) for the buildings. EUI is a common metric used in building energy data analysis to express the building's energy usage as a function of size e.g. total area of the building. It allows us to compare many buildings of the same type.
+
+``` {r}
+
+bldg_eui <- end_use_nrg %>%
+  # mutate(total_energy = `Electricity [kWh]` + `Natural Gas [kWh]`) # combine all energy use in the building
+  # rowwise() %>% mutate(total_energy = sum(c_across(`Electricity [kWh]`:`Natural Gas [kWh]`))) # alt: combine all energy use in the building that is in between `Electricity [kWh]` and `Natural Gas [kWh]`
+  # rowwise() %>% mutate(total_energy = sum(c(`Electricity [kWh]`, `Natural Gas [kWh]`))) # alt: combine all energy use in the building that is in the list c()
+  mutate(total_energy = rowSums(across(contains('kwh')))) %>%    # alt: combine all energy use in the building that contains the string 'kwh'
+  select(category = row_name, total_energy) %>%   # select and rename the columns of interest
+  filter(total_energy > 0,
+         category != "Total End Uses") %>%  # filter categories where energy use is not zero and not the sum of all
+  arrange(-total_energy) %>%  # arrange by total energy
+  mutate(eui = round(total_energy/bldg_area$`Area [m2]`[1], 2),
+         proportions = round(eui/sum(eui) * 100, 2),
+         ymax = cumsum(proportions),
+         ymin = c(0, head(ymax, n=-1))
+         )
+
+# unit label
+unit_lab = paste("kWh/m", "^{2}", "~a", sep="")
+
+# colors for the different categories
+colors = c("deepskyblue2", "olivedrab2", "darkgoldenrod2",
+           "mediumpurple2","firebrick2", "seagreen2","gold2","palevioletred2", "gray")
+
+# make donut plot
+bldg_eui %>%
+  mutate(category = as.factor(sprintf("%s [%.1f%%]", category, proportions))) %>%
+  ggplot(., aes(ymin = ymin, ymax = ymax, xmin = 3, xmax = 4, fill = category)) +
+  geom_rect() +
+  xlim(c(-0.5,4)) +
+  coord_polar(theta="y") +
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    panel.border = element_blank()
+  ) +
+  theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+  ) +
+  theme(
+    legend.title = element_blank(),
+    legend.text = element_text(size = 15)
+  ) +
+  xlab(NULL) +
+  ylab(NULL) +
+  annotate("text", 0.75, 0, label=round(sum(bldg_eui$eui),0), size=30, vjust = 0.7) +
+  annotate("text", -0.5, 0, label=unit_lab, size=6, parse=TRUE, vjust = 2) +
+  scale_fill_manual(values = colors)
+
+```
+
+
+## Cooling and Heating
+
+We now do an analysis on the behavior of the cooling and heating energy consumption of the building. Specifically, We want to learn how outdoor air affects the heating and cooling energy consumption. Thus, we retrieve time series heating and cooling energy consumption and outdoor air temperature data.
+
+```{r}
+
+# retrieve heating and cooling energy
+hvac_nrg <- job$report_data(
+  name = sprintf("Air System Total %s Energy", c("Heating", "Cooling"))
+)
+
+outdoor_air_temp <- job$report_data(
+  name = "Site Outdoor Air Drybulb Temperature"
+)
+
+```
+
+The HVAC contains three separate systems which supplies each of the zones. We want to obtain one column that contains that total heating consumption and one column for the total cooling energy consumption.
+
+```{r}
+
+# define conversion factor
+joules_to_kwh <- 2.7778e-7
+
+# scatter plot that compares heating and cooling energy against outdoor air temperature
+hvac_nrg %>%
+  pivot_wider(names_from = c("key_value", "name"),
+              values_from = "value") %>%
+  mutate(heating = rowSums(across(contains("Heating")))*joules_to_kwh,
+         cooling = rowSums(across(contains("Cooling")))*joules_to_kwh
+         ) %>%
+  select(datetime, heating, cooling) %>%
+  left_join(select(outdoor_air_temp, datetime, oat = value), by = 'datetime') %>%
+  pivot_longer(cols = c(cooling, heating),
+               names_to = "End-Use",
+               values_to = "Energy") %>%
+  mutate(`End-Use` = factor(`End-Use`, levels = c("heating", "cooling"))) %>%
+  filter(!(weekdays(datetime) %in% c("Saturday", "Sunday")),
+         hour(datetime) >= 8, hour(datetime) <= 17,
+         ) %>%
+  ggplot(., aes(x=oat, y=`Energy`, color=`End-Use`)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw() +
+  theme(legend.position = "top") +
+  guides(color = guide_legend(override.aes = list(size=2))) +
+  xlab("Outdoor Air Temperature [C]") +
+  ylab("Energy Consumption [kWh]") +
+  coord_cartesian(ylim=c(0, 250)) +
+  stat_regline_equation(label.y = c(225,200), aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~~")))
+
+```
 
 
