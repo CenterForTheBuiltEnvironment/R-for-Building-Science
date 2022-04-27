@@ -269,7 +269,6 @@ model$objects("Core_bottom_Lights")
 model$object("Nonres_Exterior_Wall_Insulation")
 ```
 
-Keep these types of properties in mind. We will come back to them later.
 
 ## Visual inspection of the model
 
@@ -524,4 +523,191 @@ hvac_nrg %>%
 
 ```
 
+# Parametric Simulations
 
+# Setup parametric models
+We will now explore how to perform parametric simulations with `eplusr`. We can initiate a parametric job with a seed model and weather file.
+
+```{r}
+
+# save idf into new folder
+model$save(file.path(simulation_folder, 'parametric', basename(model_file)), overwrite = TRUE)
+
+# create a parametric prototype of seed model and given weather file
+param <- param_job(model, weather_file)
+
+```
+
+Then we need to specify the design alternatives. We do these through functions.
+
+```{r}
+
+# create function to modify lighting power density
+set_lpd <- function(model, lpd = NA) {
+  # keep original model if lpd is NA
+  if (is.na(lpd)) return(model)
+  
+  # set lighting power density for all light object class
+  # you can run model$objects("Core_bottom_Lights") to figure out available field to change
+  model$set(Lights := list(watts_per_zone_floor_area = lpd))
+  
+  # return the modified model
+  return(model)
+}
+
+
+# create function to modify insulation level
+set_insulation <- function(model, pct_improvement = NA) {
+  # keep original model if insulation is NA
+  if (is.na(pct_improvement)) return(model)
+  
+  # set new insulation level
+  old_insulation <- model$`Material:NoMass`$Nonres_Exterior_Wall_Insulation$`Thermal Resistance`
+  new_insulation <- old_insulation*(1+(pct_improvement/100))
+  
+  model$`Material:NoMass`$Nonres_Exterior_Wall_Insulation$`Thermal Resistance` <- new_insulation
+  
+  # return the modified model
+  return(model)
+}
+
+
+```
+
+
+Once the functions are define, we can us `$apply_measure` to create a set of models to simulate.
+
+```{r}
+
+# combine the design alternative into one function
+design_alternatives <- function(model, lpd, pct_improvement) {
+  model <- set_lpd(model, lpd)
+  model <- set_insulation(model, pct_improvement)
+  
+  return(model)
+}
+
+# apply design alternative and create parametric models
+param$apply_measure(design_alternatives,
+                    lpd = c(NA, 15, 4, NA, NA),
+                    pct_improvement = c(NA, NA, NA, 10, 50),
+                    .names = c("basecase", "T12", "LED", "good_insulation", "best_insulation")
+                    )
+
+```
+
+After parametric models have been created, we can retrieve a summary of the parameter values and model names we used to define them.
+
+```{r}
+
+param$cases()
+
+```
+
+We are now ready to run the simulations.
+
+```{r}
+
+# run the simulations
+param$run()
+
+```
+
+# Repeat Visualizations for parametric simulations
+
+## End-Use Energy Consumption
+```{r}
+
+# retrieve and save data tables for analysis
+param_end_use_nrg <- param$tabular_data(table_name = "End Uses", wide = TRUE)[[1]]
+
+# Calculate eui
+# added group_by to make the same plot work with parametric data
+param_eui <- param_end_use_nrg %>%
+  mutate(total_energy = rowSums(across(contains('kwh')))) %>%    # alt: combine all energy use in the building that contains the string 'kwh'
+  select(index, case, category = row_name, total_energy) %>%   # select and rename the columns of interest
+  filter(total_energy > 0,
+         category != "Total End Uses") %>%  # filter categories where energy use is not zero and not the sum of all
+  arrange(index, -total_energy) %>%  # arrange by total energy
+  group_by(case) %>%
+  mutate(eui = round(total_energy/bldg_area$`Area [m2]`[1], 2),
+         bldg_eui = sum(eui),
+         proportions = round(eui/bldg_eui * 100, 2),
+         ymax = cumsum(proportions),
+         ymin = c(0, head(ymax, n=-1))
+  )
+
+# unit label
+unit_lab = paste("kWh/m", "^{2}", "~a", sep="")
+
+# colors for the different categories
+colors = c("deepskyblue2", "olivedrab2", "darkgoldenrod2",
+           "mediumpurple2","firebrick2", "seagreen2","gold2","palevioletred2", "gray")
+
+
+# make donut plot
+# added facet_wrap to make the same plot work with parametric data
+param_eui %>%
+  #mutate(category = as.factor(sprintf("%s [%.1f%%]", category, proportions))) %>%
+  ggplot(., aes(ymin = ymin, ymax = ymax, xmin = 3, xmax = 4, fill = category, group=case)) +
+  geom_rect() +
+  geom_text(x = 0, aes(y=0, label = round(bldg_eui, 1)), size = 12) +
+  #geom_text(x=4.5, aes(y=(ymax+ymin)/2, label=paste0(round(proportions,0), "%"))) +
+  facet_wrap(~case) +
+  xlim(c(-0.5,4)) +
+  coord_polar(theta="y") +
+  theme_void() +
+  theme(
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12)
+  ) +
+  theme(strip.text = element_text(size=12)) +
+  annotate("text", -0.5, 0, label=unit_lab, size=3, parse=TRUE, vjust = 2) +
+  scale_fill_manual(values = colors)
+
+```
+
+## Heating and Cooling
+
+```{r}
+
+# retrieve heating and cooling energy
+parma_hvac_nrg <- param$report_data(
+  name = sprintf("Air System Total %s Energy", c("Heating", "Cooling"))
+)
+
+
+# scatter plot that compares heating and cooling energy against outdoor air temperature
+# added group_by and facet_wrap to make the same plot work with parametric data
+parma_hvac_nrg %>%
+  group_by(case) %>%
+  pivot_wider(names_from = c("key_value", "name"),
+              values_from = "value") %>%
+  mutate(heating = rowSums(across(contains("Heating")))*joules_to_kwh,
+         cooling = rowSums(across(contains("Cooling")))*joules_to_kwh
+  ) %>%
+  select(datetime, index, case, heating, cooling) %>%
+  left_join(select(outdoor_air_temp, datetime, oat = value), by = 'datetime') %>%
+  pivot_longer(cols = c(cooling, heating),
+               names_to = "End-Use",
+               values_to = "Energy") %>%
+  mutate(`End-Use` = factor(`End-Use`, levels = c("heating", "cooling"))) %>%
+  filter(!(weekdays(datetime) %in% c("Saturday", "Sunday")),
+         hour(datetime) >= 8, hour(datetime) <= 17,
+  ) %>%
+  ggplot(., aes(x=oat, y=`Energy`, color=`End-Use`)) +
+  geom_point() +
+  facet_wrap(~case) +
+  geom_smooth(method = "lm") +
+  theme_bw() +
+  theme(legend.position = "top") +
+  guides(color = guide_legend(override.aes = list(size=2))) +
+  xlab("Outdoor Air Temperature [C]") +
+  ylab("Energy Consumption [kWh]") +
+  coord_cartesian(ylim=c(0, 275)) +
+  stat_regline_equation(label.y = c(270,235), aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~~")))
+
+```
+
+
+Explore different simulation data and various design alternatives to see how end-use energy consumption in the building changes.
