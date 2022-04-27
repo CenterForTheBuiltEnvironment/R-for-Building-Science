@@ -1,0 +1,16 @@
+ ReadVarsESO
+ processing:eplusout.inp
+ input file:eplusout.eso
+ output file:T12.csv
+ getting all vars from:eplusout.eso
+  number variables requested for output=           7
+ ReadVars Run Time=00hr 00min  1.20sec
+ ReadVarsESO program completed successfully.
+ ReadVarsESO
+ processing:eplusmtr.inp
+ input file:eplusout.mtr
+ output file:T12Meter.csv
+ getting all vars from:eplusout.mtr
+  number variables requested for output=           3
+ ReadVars Run Time=00hr 00min  0.84sec
+ ReadVarsESO program completed successfully.
