@@ -46,7 +46,7 @@ Like we learned before, the first part of the script is to setup the working env
 ``` {r}
 
 # install eplusr and supporting library if not already installed
-if(!require("eplusr")) install.packages(c("decido", "eplusr"), repos = "http://cran.us.r-project.org")
+if(!require("eplusr")) install.packages(c("decido", "eplusr", "rgl"), repos = "http://cran.us.r-project.org")
 
 
 # install the EnergyPlus simulation engine if not already installed
